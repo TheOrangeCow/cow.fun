@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Graveyard - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --green: #2E9E5B;
+            --orange: #FF6B2C;
+            --stone: #D8D5C9;
+            --stone-dark: #B6B2A3;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+        }
+
+        main {
+            flex: 1;
+            width: min(920px, 100%);
+            margin: 10px auto clamp(16px, 4vw, 40px);
+            padding: 0 clamp(12px, 3vw, 40px);
+        }
+
+        .form-card {
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            padding: 24px clamp(16px, 4vw, 32px);
+            margin-bottom: 32px;
+            background: #fff;
+        }
+
+        .form-card h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 18px;
+            margin: 0 0 14px;
+        }
+
+        label {
+            display: block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--ink);
+            margin-bottom: 14px;
+            resize: vertical;
+        }
+
+        textarea {
+            min-height: 70px;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--ink);
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        button.submit {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: #fff;
+            background: var(--green);
+            border: none;
+            padding: 11px 20px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        button.submit:hover {
+            opacity: 0.9;
+        }
+
+        button.submit:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .form-error {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--orange);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .grave {
+            background: var(--stone);
+            border: 2px solid var(--stone-dark);
+            border-radius: 90px 90px 10px 10px;
+            padding: 26px 18px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .grave::before {
+            content: "✝";
+            display: block;
+            font-size: 18px;
+            color: var(--ink-soft);
+            margin-bottom: 2px;
+        }
+
+        .grave h3 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 17px;
+            margin: 0;
+            word-break: break-word;
+        }
+
+        .grave .rip {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--ink-soft);
+            text-transform: uppercase;
+        }
+
+        .grave p {
+            font-size: 13px;
+            color: var(--ink-soft);
+            margin: 4px 0 0;
+            flex: 1;
+        }
+
+        .grave .date {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--ink-soft);
+            opacity: 0.7;
+        }
+
+        .empty-state {
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            padding: 40px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="/">← cow.fun</a>
+        <div class="score-tag">graves: <span id="graveCount">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Project Graveyard</h1>
+        <div class="caption">lay your failed projects to rest, forever, for everyone</div>
+    </div>
+
+    <main>
+        <div class="form-card">
+            <h2>dig a new grave</h2>
+            <label for="titleInput">project name</label>
+            <input type="text" id="titleInput" maxlength="80" placeholder="e.g. TaskMaster 3000">
+            <label for="descInput">epitaph / cause of death</label>
+            <textarea id="descInput" maxlength="500"
+                placeholder="e.g. died of scope creep before it ever ran"></textarea>
+            <div class="form-row">
+                <button class="submit" id="submitBtn">lay to rest</button>
+                <span class="form-error" id="errorMsg"></span>
+            </div>
+        </div>
+
+        <div class="grid" id="grid"></div>
+        <div class="empty-state" id="emptyState" style="display:none;">no graves yet. be the first to bury something.
+        </div>
+    </main>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const emptyState = document.getElementById('emptyState');
+        const graveCount = document.getElementById('graveCount');
+        const titleInput = document.getElementById('titleInput');
+        const descInput = document.getElementById('descInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        const API = '/graveyard/api/graves';
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatDate(ts) {
+            const d = new Date(ts * 1000);
+            return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function render(graves) {
+            graveCount.textContent = graves.length;
+            if (graves.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            emptyState.style.display = 'none';
+            grid.innerHTML = graves.map(g => `
+                <div class="grave">
+                    <h3>${escapeHtml(g.title)}</h3>
+                    <div class="rip">R.I.P.</div>
+                    ${g.description ? `<p>${escapeHtml(g.description)}</p>` : ''}
+                    <div class="date">${formatDate(g.created_at)}</div>
+                </div>
+            `).join('');
+        }
+
+        async function loadGraves() {
+            try {
+                const res = await fetch(API);
+                const data = await res.json();
+                render(data);
+            } catch (e) {
+                errorMsg.textContent = 'could not load the graveyard.';
+            }
+        }
+
+        async function submitGrave() {
+            const title = titleInput.value.trim();
+            const description = descInput.value.trim();
+            errorMsg.textContent = '';
+
+            if (!title) {
+                errorMsg.textContent = 'every grave needs a name.';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            try {
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description })
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'something went wrong');
+                }
+                titleInput.value = '';
+                descInput.value = '';
+                await loadGraves();
+            } catch (e) {
+                errorMsg.textContent = e.message;
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        submitBtn.addEventListener('click', submitGrave);
+        descInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitGrave();
+        });
+
+        loadGraves();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logic Bench - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+            --panel: #ffffff;
+            --wire-off: #C9C6BE;
+            --wire-on: #FF6B2C;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px clamp(16px, 3vw, 36px) 8px;
+            flex-shrink: 0;
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(22px, 3vw, 30px);
+            margin: 0;
+            letter-spacing: -0.5px;
+            text-align: center;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        button.tool-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        button.tool-btn:hover {
+            background: var(--orange);
+        }
+
+        button.tool-btn.ghost {
+            background: #fff;
+            color: var(--ink);
+            border: 1px solid var(--line);
+        }
+
+        button.tool-btn.ghost:hover {
+            border-color: var(--ink);
+        }
+
+        .caption {
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px;
+            color: var(--ink-soft);
+            padding: 0 20px 10px;
+            flex-shrink: 0;
+        }
+
+        .caption b {
+            color: var(--ink);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            padding: 0 clamp(12px, 3vw, 36px) clamp(12px, 3vw, 36px);
+            gap: 14px;
+        }
+
+        #palette {
+            width: 190px;
+            flex-shrink: 0;
+            background: var(--panel);
+            border: 2px solid var(--ink);
+            border-radius: 18px;
+            overflow-y: auto;
+            padding: 12px 10px 20px;
+        }
+
+        .pal-group-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10.5px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin: 14px 4px 6px;
+        }
+
+        .pal-group-title:first-child {
+            margin-top: 2px;
+        }
+
+        .palette-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 8px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: #fff;
+            margin-bottom: 6px;
+            cursor: grab;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            user-select: none;
+        }
+
+        .palette-item:hover {
+            border-color: var(--ink);
+            background: #fff8f2;
+        }
+
+        .palette-item:active {
+            cursor: grabbing;
+        }
+
+        .pal-badge {
+            flex-shrink: 0;
+            width: 30px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: var(--ink);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .pal-badge.src {
+            background: var(--orange);
+        }
+
+        .pal-badge.out {
+            background: var(--pink);
+        }
+
+        .pal-badge.misc {
+            background: var(--ink-soft);
+        }
+
+        .pal-badge svg {
+            transform: scale(0.42);
+            transform-origin: center;
+        }
+
+        #board-wrap {
+            flex: 1;
+            border: 2px dashed var(--line);
+            border-radius: 18px;
+            overflow: auto;
+            position: relative;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%),
+                var(--bg);
+        }
+
+        #board {
+            position: relative;
+            width: 2200px;
+            height: 1300px;
+        }
+
+        #board svg.wires {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #board svg.wires path.wire {
+            pointer-events: stroke;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        .wire {
+            stroke: var(--wire-off);
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .wire.on {
+            stroke: var(--wire-on);
+        }
+
+        .wire.hz {
+            stroke-dasharray: 3 4;
+            stroke: #b3b0aa;
+        }
+
+        .wire.selected {
+            stroke: var(--pink);
+            stroke-width: 4;
+        }
+
+        .wire.draft {
+            stroke: var(--ink-soft);
+            stroke-dasharray: 5 3;
+        }
+
+        .comp {
+            position: absolute;
+            z-index: 2;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .comp:active {
+            cursor: grabbing;
+        }
+
+        .comp.selected .body,
+        .comp.selected .gbody,
+        .comp.selected .label-body {
+            outline: 3px dashed var(--pink);
+            outline-offset: 3px;
+        }
+
+        .pin {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            margin: -11px 0 0 -11px;
+            border-radius: 50%;
+            background: transparent;
+            cursor: crosshair;
+            z-index: 3;
+            touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2.5px solid var(--ink);
+            pointer-events: none;
+        }
+
+        .pin-out::after {
+            background: var(--orange);
+        }
+
+        .pin:hover::after {
+            transform: scale(1.35);
+        }
+
+        .gbody {
+            fill: #fff;
+            stroke: var(--ink);
+            stroke-width: 2;
+        }
+
+        .stub,
+        .gline {
+            stroke: var(--ink);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .glabel {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 8px;
+            fill: var(--ink-soft);
+        }
+
+        .gname {
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--ink-soft);
+            margin-top: 1px;
+        }
+
+        .toggle-body {
+            width: 64px;
+            height: 34px;
+            border-radius: 20px;
+            background: #e4e1d8;
+            border: 2px solid var(--ink);
+            position: relative;
+            margin-top: 3px;
+        }
+
+        .knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid var(--ink);
+            transition: left .15s ease;
+        }
+
+        .comp-toggle.on .toggle-body {
+            background: var(--orange);
+        }
+
+        .comp-toggle.on .knob {
+            left: 32px;
+        }
+
+        .push-body {
+            width: 60px;
+            height: 36px;
+            border-radius: 10px;
+            background: #eeece5;
+            border: 2px solid var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            box-shadow: 0 3px 0 var(--line);
+        }
+
+        .comp-push.on .push-body {
+            background: var(--orange);
+            color: #fff;
+            box-shadow: 0 1px 0 var(--line);
+            transform: translateY(2px);
+        }
+
+        .clock-body {
+            width: 64px;
+            height: 40px;
+            border-radius: 10px;
+            background: #eeece5;
+            border: 2px solid var(--ink);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+        }
+
+        .comp-clock.on .clock-body {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .clk-icon {
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .clk-period {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            padding: 1px 4px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .6);
+        }
+
+        .comp-clock.paused .clock-body {
+            opacity: .55;
+        }
+
+        .const-body {
+            width: 46px;
+            height: 34px;
+            border-radius: 8px;
+            border: 2px solid var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .comp-high .const-body {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .comp-low .const-body {
+            background: #e4e1d8;
+            color: var(--ink-soft);
+        }
+
+        .bulb-body {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #efeee8;
+            border: 2.5px solid var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s, box-shadow .15s;
+        }
+
+        .comp-bulb.lit .bulb-body {
+            background: #FFD166;
+            box-shadow: 0 0 18px 6px rgba(255, 209, 102, 0.85);
+        }
+
+        .bulb-body::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(23, 22, 26, 0.12);
+        }
+
+        .comp-bulb.lit .bulb-body::after {
+            background: rgba(23, 22, 26, 0.28);
+        }
+
+        .disp-body {
+            width: 100%;
+            height: 100%;
+            background: #17161A;
+            border: 2px solid var(--ink);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .digit {
+            font-family: 'IBM Plex Mono', monospace;
+            color: #FF9F5A;
+            font-size: 20px;
+            letter-spacing: 1px;
+        }
+
+        .comp-disp8 .digit {
+            font-size: 16px;
+        }
+
+        .pin-tag {
+            position: absolute;
+            left: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 8px;
+            color: var(--ink-soft);
+            transform: translateY(-50%);
+        }
+
+        .label-body {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1.5px dashed transparent;
+            min-width: 40px;
+        }
+
+        .label-body:hover,
+        .label-body:focus {
+            border-color: var(--line);
+            background: rgba(255, 255, 255, .6);
+            outline: none;
+        }
+
+        #hint {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--ink-soft);
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, .85);
+            border: 1px solid var(--line);
+            padding: 6px 10px;
+            border-radius: 10px;
+            z-index: 4;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <h1>Logic Bench</h1>
+        <div class="header-actions">
+            <input type="file" id="loadInput" accept=".json,application/json" style="display:none">
+            <button class="tool-btn ghost" id="loadBtn">load ↑</button>
+            <button class="tool-btn" id="saveBtn">save ↓</button>
+            <button class="tool-btn ghost" id="clearBtn">clear board</button>
+        </div>
+    </header>
+
+    <div class="caption">drag a part onto the board · drag from an <b>orange</b> pin to a white pin to wire it · click a
+        filled input pin to unplug it · select + delete/backspace to remove · <b>save</b> downloads your circuit,
+        <b>load</b> brings one back
+    </div>
+
+    <main>
+        <div id="palette"></div>
+        <div id="board-wrap">
+            <div id="board">
+                <svg class="wires"></svg>
+            </div>
+            <div id="hint">nothing selected</div>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            const svgNS = "http://www.w3.org/2000/svg";
+
+            const DEFS = {
+                toggle: { w: 64, h: 40, ins: [], outs: [{ x: 64, y: 20 }], name: 'Toggle' },
+                push: { w: 64, h: 40, ins: [], outs: [{ x: 64, y: 20 }], name: 'Push Button' },
+                clock: { w: 64, h: 44, ins: [], outs: [{ x: 64, y: 22 }], name: 'Clock' },
+                high: { w: 46, h: 36, ins: [], outs: [{ x: 46, y: 18 }], name: 'High' },
+                low: { w: 46, h: 36, ins: [], outs: [{ x: 46, y: 18 }], name: 'Low' },
+                bulb: { w: 52, h: 52, ins: [{ x: 0, y: 26 }], outs: [], name: 'Light Bulb' },
+                disp4: { w: 64, h: 96, ins: [], outs: [], name: '4-Bit Display' },
+                disp8: { w: 64, h: 176, ins: [], outs: [], name: '8-Bit Display' },
+                not: { w: 64, h: 48, ins: [{ x: 0, y: 24 }], outs: [{ x: 64, y: 24 }], name: 'NOT' },
+                and: { w: 70, h: 56, ins: [{ x: 0, y: 14 }, { x: 0, y: 42 }], outs: [{ x: 70, y: 28 }], name: 'AND' },
+                nand: { w: 70, h: 56, ins: [{ x: 0, y: 14 }, { x: 0, y: 42 }], outs: [{ x: 70, y: 28 }], name: 'NAND' },
+                or: { w: 70, h: 56, ins: [{ x: 0, y: 14 }, { x: 0, y: 42 }], outs: [{ x: 70, y: 28 }], name: 'OR' },
+                nor: { w: 70, h: 56, ins: [{ x: 0, y: 14 }, { x: 0, y: 42 }], outs: [{ x: 70, y: 28 }], name: 'NOR' },
+                xor: { w: 78, h: 56, ins: [{ x: 0, y: 14 }, { x: 0, y: 42 }], outs: [{ x: 78, y: 28 }], name: 'XOR' },
+                xnor: { w: 78, h: 56, ins: [{ x: 0, y: 14 }, { x: 0, y: 42 }], outs: [{ x: 78, y: 28 }], name: 'XNOR' },
+                tri: { w: 70, h: 56, ins: [{ x: 0, y: 14 }, { x: 0, y: 42 }], outs: [{ x: 70, y: 28 }], name: 'Tri-State' },
+                label: { w: 140, h: 32, ins: [], outs: [], name: 'Label' }
+            };
+            DEFS.disp4.ins = Array.from({ length: 4 }, (_, i) => ({ x: 0, y: (96 / 5) * (i + 1) }));
+            DEFS.disp8.ins = Array.from({ length: 8 }, (_, i) => ({ x: 0, y: (176 / 9) * (i + 1) }));
+
+            const COMPUTE = {
+                not: ins => [ins[0] ? 0 : 1],
+                and: ins => [(ins[0] && ins[1]) ? 1 : 0],
+                nand: ins => [(ins[0] && ins[1]) ? 0 : 1],
+                or: ins => [(ins[0] || ins[1]) ? 1 : 0],
+                nor: ins => [(ins[0] || ins[1]) ? 0 : 1],
+                xor: ins => [(!!ins[0] !== !!ins[1]) ? 1 : 0],
+                xnor: ins => [(!!ins[0] !== !!ins[1]) ? 0 : 1],
+                tri: ins => [ins[1] ? (ins[0] ? 1 : 0) : null]
+            };
+            const SOURCE_TYPES = new Set(['toggle', 'push', 'clock', 'high', 'low']);
+
+            function gateSvg(type) {
+                switch (type) {
+                    case 'not': return `<svg viewBox="0 0 64 48" width="64" height="48">
+                <line x1="0" y1="24" x2="4" y2="24" class="stub"/>
+                <path d="M4,4 L4,44 L50,24 Z" class="gbody"/>
+                <circle cx="57" cy="24" r="6" class="gbody"/>
+                <line x1="63" y1="24" x2="64" y2="24" class="stub"/>
+            </svg>`;
+                    case 'and': return `<svg viewBox="0 0 70 56" width="70" height="56">
+                <line x1="0" y1="14" x2="6" y2="14" class="stub"/>
+                <line x1="0" y1="42" x2="6" y2="42" class="stub"/>
+                <path d="M6,4 H34 A24,24 0 0 1 34,52 H6 Z" class="gbody"/>
+                <line x1="58" y1="28" x2="70" y2="28" class="stub"/>
+            </svg>`;
+                    case 'nand': return `<svg viewBox="0 0 70 56" width="70" height="56">
+                <line x1="0" y1="14" x2="6" y2="14" class="stub"/>
+                <line x1="0" y1="42" x2="6" y2="42" class="stub"/>
+                <path d="M6,4 H28 A22,22 0 0 1 28,50 H6 Z" class="gbody"/>
+                <circle cx="56" cy="28" r="6" class="gbody"/>
+                <line x1="62" y1="28" x2="70" y2="28" class="stub"/>
+            </svg>`;
+                    case 'or': return `<svg viewBox="0 0 70 56" width="70" height="56">
+                <line x1="0" y1="14" x2="8" y2="14" class="stub"/>
+                <line x1="0" y1="42" x2="8" y2="42" class="stub"/>
+                <path d="M8,4 Q22,28 8,52 Q40,52 62,28 Q40,4 8,4 Z" class="gbody"/>
+                <line x1="62" y1="28" x2="70" y2="28" class="stub"/>
+            </svg>`;
+                    case 'nor': return `<svg viewBox="0 0 70 56" width="70" height="56">
+                <line x1="0" y1="14" x2="8" y2="14" class="stub"/>
+                <line x1="0" y1="42" x2="8" y2="42" class="stub"/>
+                <path d="M8,4 Q22,28 8,52 Q34,52 52,28 Q34,4 8,4 Z" class="gbody"/>
+                <circle cx="58" cy="28" r="6" class="gbody"/>
+                <line x1="64" y1="28" x2="70" y2="28" class="stub"/>
+            </svg>`;
+                    case 'xor': return `<svg viewBox="0 0 78 56" width="78" height="56">
+                <line x1="0" y1="14" x2="16" y2="14" class="stub"/>
+                <line x1="0" y1="42" x2="16" y2="42" class="stub"/>
+                <path d="M8,4 Q22,28 8,52" class="gline"/>
+                <path d="M16,4 Q30,28 16,52 Q48,52 70,28 Q48,4 16,4 Z" class="gbody"/>
+                <line x1="70" y1="28" x2="78" y2="28" class="stub"/>
+            </svg>`;
+                    case 'xnor': return `<svg viewBox="0 0 78 56" width="78" height="56">
+                <line x1="0" y1="14" x2="16" y2="14" class="stub"/>
+                <line x1="0" y1="42" x2="16" y2="42" class="stub"/>
+                <path d="M8,4 Q22,28 8,52" class="gline"/>
+                <path d="M16,4 Q30,28 16,52 Q42,52 60,28 Q42,4 16,4 Z" class="gbody"/>
+                <circle cx="66" cy="28" r="6" class="gbody"/>
+                <line x1="72" y1="28" x2="78" y2="28" class="stub"/>
+            </svg>`;
+                    case 'tri': return `<svg viewBox="0 0 70 56" width="70" height="56">
+                <line x1="0" y1="14" x2="6" y2="14" class="stub"/>
+                <line x1="0" y1="42" x2="6" y2="42" class="stub"/>
+                <path d="M6,4 L6,52 L58,28 Z" class="gbody"/>
+                <line x1="58" y1="28" x2="70" y2="28" class="stub"/>
+                <text x="10" y="46" class="glabel">EN</text>
+            </svg>`;
+                }
+                return '';
+            }
+
+            const PALETTE = [
+                { group: 'Inputs', badge: 'src', items: ['toggle', 'push', 'clock', 'high', 'low'] },
+                { group: 'Outputs', badge: 'out', items: ['bulb', 'disp4', 'disp8'] },
+                { group: 'Gates', badge: 'gate', items: ['not', 'and', 'nand', 'or', 'nor', 'xor', 'xnor', 'tri'] },
+                { group: 'Other', badge: 'misc', items: ['label'] }
+            ];
+            const ICONS = { toggle: '⏻', push: '●', clock: '⏱', high: '1', low: '0', bulb: '💡', disp4: '4b', disp8: '8b', label: 'Aa' };
+
+            const paletteEl = document.getElementById('palette');
+            PALETTE.forEach(group => {
+                const title = document.createElement('div');
+                title.className = 'pal-group-title';
+                title.textContent = group.group;
+                paletteEl.appendChild(title);
+                group.items.forEach(type => {
+                    const def = DEFS[type];
+                    const item = document.createElement('div');
+                    item.className = 'palette-item';
+                    item.draggable = true;
+                    item.dataset.type = type;
+                    const badgeClass = group.badge === 'gate' ? '' : group.badge;
+                    let badgeInner = ICONS[type] || '';
+                    if (['not', 'and', 'nand', 'or', 'nor', 'xor', 'xnor', 'tri'].includes(type)) {
+                        badgeInner = gateSvg(type);
+                    }
+                    item.innerHTML = `<span class="pal-badge ${badgeClass}">${badgeInner}</span><span>${def.name}</span>`;
+                    item.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', type);
+                        e.dataTransfer.effectAllowed = 'copy';
+                    });
+                    paletteEl.appendChild(item);
+                });
+            });
+
+            let idCounter = 1;
+            const newId = () => 'c' + (idCounter++);
+            const components = [];
+            const compsById = {};
+            const compEls = {};
+            let wires = [];
+            const outputValues = {};
+            let selectedId = null;
+            let selectedWireId = null;
+
+            const board = document.getElementById('board');
+            const svg = board.querySelector('svg.wires');
+            const boardWrap = document.getElementById('board-wrap');
+            const hint = document.getElementById('hint');
+
+            function setHint(text) { hint.textContent = text; }
+
+            function createComponent(type, x, y) {
+                const comp = { id: newId(), type, x: Math.max(0, x), y: Math.max(0, y), state: {} };
+                if (type === 'toggle') comp.state.value = 0;
+                if (type === 'push') comp.state.value = 0;
+                if (type === 'clock') { comp.state.value = 0; comp.state.running = true; comp.state.period = 1000; comp.state.last = Date.now(); }
+                if (type === 'high') comp.state.value = 1;
+                if (type === 'low') comp.state.value = 0;
+                if (type === 'label') comp.state.text = 'Label';
+                components.push(comp);
+                compsById[comp.id] = comp;
+                const el = buildComponentEl(comp);
+                compEls[comp.id] = el;
+                board.appendChild(el);
+                fullUpdate();
+                return comp;
+            }
+
+            function buildComponentEl(comp) {
+                const def = DEFS[comp.type];
+                const el = document.createElement('div');
+                el.className = 'comp comp-' + comp.type;
+                el.style.left = comp.x + 'px';
+                el.style.top = comp.y + 'px';
+                el.style.width = def.w + 'px';
+
+                let bodyHtml = '';
+                switch (comp.type) {
+                    case 'toggle': el.style.height = def.h + 'px'; bodyHtml = `<div class="body toggle-body"><div class="knob"></div></div><div class="gname">Toggle</div>`; break;
+                    case 'push': el.style.height = def.h + 'px'; bodyHtml = `<div class="body push-body">PUSH</div><div class="gname">Push</div>`; break;
+                    case 'clock': el.style.height = def.h + 'px'; bodyHtml = `<div class="body clock-body"><span class="clk-icon">⏱</span><span class="clk-period">1.0s</span></div>`; break;
+                    case 'high': el.style.height = def.h + 'px'; bodyHtml = `<div class="body const-body">1</div>`; break;
+                    case 'low': el.style.height = def.h + 'px'; bodyHtml = `<div class="body const-body">0</div>`; break;
+                    case 'bulb': el.style.height = def.h + 'px'; bodyHtml = `<div class="body bulb-body"></div>`; break;
+                    case 'disp4': el.style.height = def.h + 'px'; bodyHtml = `<div class="body disp-body" style="width:${def.w - 24}px;height:${def.h - 8}px;margin-left:24px;margin-top:4px;"><span class="digit">0</span></div>`; break;
+                    case 'disp8': el.style.height = def.h + 'px'; bodyHtml = `<div class="body disp-body" style="width:${def.w - 24}px;height:${def.h - 8}px;margin-left:24px;margin-top:4px;"><span class="digit">0</span></div>`; break;
+                    case 'label': el.style.height = def.h + 'px'; bodyHtml = `<div class="body label-body" contenteditable="false">${comp.state.text}</div>`; break;
+                    default: el.style.height = def.h + 'px'; bodyHtml = gateSvg(comp.type) + `<div class="gname">${def.name}</div>`;
+                }
+                el.innerHTML = bodyHtml;
+
+                if (comp.type === 'disp4' || comp.type === 'disp8') {
+                    def.ins.forEach((p, i) => {
+                        const tag = document.createElement('div');
+                        tag.className = 'pin-tag';
+                        tag.style.top = p.y + 'px';
+                        tag.textContent = 'b' + i;
+                        el.appendChild(tag);
+                    });
+                }
+
+                def.ins.forEach((p, i) => el.appendChild(makePin(comp, 'in', i, p)));
+                def.outs.forEach((p, i) => el.appendChild(makePin(comp, 'out', i, p)));
+
+                el.addEventListener('pointerdown', e => {
+                    if (e.target.closest('.pin')) return;
+                    onCompPointerDown(e, comp, el);
+                });
+
+                if (comp.type === 'label') {
+                    const lbl = el.querySelector('.label-body');
+                    lbl.addEventListener('dblclick', e => {
+                        e.stopPropagation();
+                        lbl.contentEditable = 'true';
+                        lbl.focus();
+                        document.getSelection().selectAllChildren(lbl);
+                    });
+                    lbl.addEventListener('blur', () => {
+                        lbl.contentEditable = 'false';
+                        comp.state.text = lbl.textContent || 'Label';
+                    });
+                }
+
+                if (comp.type === 'clock') {
+                    const per = el.querySelector('.clk-period');
+                    per.addEventListener('pointerdown', e => e.stopPropagation());
+                    per.addEventListener('click', e => {
+                        e.stopPropagation();
+                        const options = [2000, 1000, 500, 250];
+                        let idx = options.indexOf(comp.state.period);
+                        idx = (idx + 1) % options.length;
+                        comp.state.period = options[idx];
+                        per.textContent = (comp.state.period / 1000).toFixed(2).replace(/0$/, '') + 's';
+                    });
+                }
+
+                return el;
+            }
+
+            function makePin(comp, kind, index, pos) {
+                const pin = document.createElement('div');
+                pin.className = 'pin pin-' + kind;
+                pin.style.left = pos.x + 'px';
+                pin.style.top = pos.y + 'px';
+                pin.dataset.comp = comp.id;
+                pin.dataset.kind = kind;
+                pin.dataset.index = index;
+                pin.addEventListener('pointerdown', e => onPinPointerDown(e, comp, kind, index, pin));
+                return pin;
+            }
+
+            function onCompPointerDown(e, comp, el) {
+                e.stopPropagation();
+                e.preventDefault();
+                selectComponent(comp.id);
+                const startX = e.clientX, startY = e.clientY;
+                const ox = comp.x, oy = comp.y;
+                let moved = false;
+                if (comp.type === 'push') { comp.state.value = 1; fullUpdate(); }
+
+                try { el.setPointerCapture(e.pointerId); } catch (err) { }
+
+                function onMove(ev) {
+                    const dx = ev.clientX - startX, dy = ev.clientY - startY;
+                    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+                    comp.x = Math.max(0, ox + dx);
+                    comp.y = Math.max(0, oy + dy);
+                    el.style.left = comp.x + 'px';
+                    el.style.top = comp.y + 'px';
+                    renderWires();
+                }
+                function onUp(ev) {
+                    el.removeEventListener('pointermove', onMove);
+                    el.removeEventListener('pointerup', onUp);
+                    el.removeEventListener('pointercancel', onUp);
+                    try { el.releasePointerCapture(e.pointerId); } catch (err) { }
+                    if (comp.type === 'push') comp.state.value = 0;
+                    if (!moved) {
+                        if (comp.type === 'toggle') comp.state.value = comp.state.value ? 0 : 1;
+                        if (comp.type === 'clock') comp.state.running = !comp.state.running;
+                    }
+                    fullUpdate();
+                }
+                el.addEventListener('pointermove', onMove);
+                el.addEventListener('pointerup', onUp);
+                el.addEventListener('pointercancel', onUp);
+            }
+
+            function pinPos(compId, kind, idx) {
+                const comp = compsById[compId];
+                const def = DEFS[comp.type];
+                const p = kind === 'in' ? def.ins[idx] : def.outs[idx];
+                return { x: comp.x + p.x, y: comp.y + p.y };
+            }
+
+            let draftWire = null;
+
+            function findPinUnderPoint(clientX, clientY) {
+                const pts = document.elementsFromPoint(clientX, clientY);
+                for (const el of pts) {
+                    const pin = el.closest ? el.closest('.pin') : null;
+                    if (pin) return pin;
+                }
+                return null;
+            }
+
+            function onPinPointerDown(e, comp, kind, idx, pinEl) {
+                e.stopPropagation();
+                e.preventDefault();
+                let startCompId = comp.id, startIdx = idx;
+
+                if (kind === 'in') {
+                    const existing = wires.find(w => w.toId === comp.id && w.toPin === idx);
+                    if (existing) {
+                        wires = wires.filter(w => w !== existing);
+                        startCompId = existing.fromId;
+                        startIdx = existing.fromPin;
+                        fullUpdate();
+                    } else {
+                        return;
+                    }
+                }
+
+                const startPos = pinPos(startCompId, 'out', startIdx);
+                draftWire = { p1: startPos, p2: startPos };
+                renderWires();
+
+                try { pinEl.setPointerCapture(e.pointerId); } catch (err) { }
+
+                function onMove(ev) {
+                    const rect = board.getBoundingClientRect();
+                    draftWire.p2 = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+                    renderWires();
+                }
+
+                function onUp(ev) {
+                    pinEl.removeEventListener('pointermove', onMove);
+                    pinEl.removeEventListener('pointerup', onUp);
+                    pinEl.removeEventListener('pointercancel', onUp);
+                    try { pinEl.releasePointerCapture(e.pointerId); } catch (err) { }
+                    draftWire = null;
+
+                    const target = findPinUnderPoint(ev.clientX, ev.clientY);
+                    if (target && target.dataset.kind === 'in') {
+                        const toId = target.dataset.comp, toPin = +target.dataset.index;
+                        if (toId !== startCompId) {
+                            wires = wires.filter(w => !(w.toId === toId && w.toPin === toPin));
+                            wires.push({ id: newId(), fromId: startCompId, fromPin: startIdx, toId, toPin });
+                        }
+                    }
+                    fullUpdate();
+                }
+                pinEl.addEventListener('pointermove', onMove);
+                pinEl.addEventListener('pointerup', onUp);
+                pinEl.addEventListener('pointercancel', onUp);
+            }
+
+            function selectComponent(id) {
+                selectedWireId = null;
+                selectedId = id;
+                updateSelectionVisuals();
+            }
+            function selectWire(id) {
+                selectedId = null;
+                selectedWireId = id;
+                updateSelectionVisuals();
+            }
+            function clearSelection() {
+                selectedId = null;
+                selectedWireId = null;
+                updateSelectionVisuals();
+            }
+            function updateSelectionVisuals() {
+                components.forEach(c => {
+                    const el = compEls[c.id];
+                    if (el) el.classList.toggle('selected', c.id === selectedId);
+                });
+                if (selectedId) {
+                    const c = compsById[selectedId];
+                    setHint('selected: ' + DEFS[c.type].name + ' · press delete to remove');
+                } else if (selectedWireId) {
+                    setHint('wire selected · press delete to remove');
+                } else {
+                    setHint('nothing selected');
+                }
+            }
+
+            function deleteComponent(id) {
+                wires = wires.filter(w => w.fromId !== id && w.toId !== id);
+                const idx = components.findIndex(c => c.id === id);
+                if (idx >= 0) components.splice(idx, 1);
+                const el = compEls[id];
+                if (el) el.remove();
+                delete compEls[id];
+                delete compsById[id];
+                delete outputValues[id];
+            }
+
+            board.addEventListener('pointerdown', e => {
+                if (e.target === board) clearSelection();
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.target && e.target.isContentEditable) return;
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    if (selectedId) { deleteComponent(selectedId); fullUpdate(); }
+                    else if (selectedWireId) { wires = wires.filter(w => w.id !== selectedWireId); selectedWireId = null; fullUpdate(); }
+                }
+            });
+
+            boardWrap.addEventListener('dragover', e => e.preventDefault());
+            boardWrap.addEventListener('drop', e => {
+                e.preventDefault();
+                const type = e.dataTransfer.getData('text/plain');
+                if (!DEFS[type]) return;
+                const rect = board.getBoundingClientRect();
+                const x = e.clientX - rect.left - DEFS[type].w / 2;
+                const y = e.clientY - rect.top - DEFS[type].h / 2;
+                createComponent(type, x, y);
+            });
+
+            function computeInputs(comp) {
+                const def = DEFS[comp.type];
+                const vals = new Array(def.ins.length).fill(0);
+                wires.forEach(w => {
+                    if (w.toId === comp.id) {
+                        const src = compsById[w.fromId];
+                        if (src) {
+                            const arr = outputValues[src.id];
+                            const v = arr ? arr[w.fromPin] : 0;
+                            vals[w.toPin] = v === 1 ? 1 : 0;
+                        }
+                    }
+                });
+                return vals;
+            }
+
+            function tickClocks() {
+                const now = Date.now();
+                components.forEach(c => {
+                    if (c.type === 'clock' && c.state.running) {
+                        if (now - c.state.last >= c.state.period / 2) {
+                            c.state.value = c.state.value ? 0 : 1;
+                            c.state.last = now;
+                        }
+                    }
+                });
+            }
+
+            function simulate() {
+                for (let iter = 0; iter < 15; iter++) {
+                    components.forEach(comp => {
+                        if (SOURCE_TYPES.has(comp.type)) {
+                            outputValues[comp.id] = [comp.state.value ? 1 : 0];
+                        } else if (COMPUTE[comp.type]) {
+                            outputValues[comp.id] = COMPUTE[comp.type](computeInputs(comp));
+                        }
+                    });
+                }
+            }
+
+            function renderWires() {
+                svg.innerHTML = '';
+                wires.forEach(w => {
+                    const p1 = pinPos(w.fromId, 'out', w.fromPin);
+                    const p2 = pinPos(w.toId, 'in', w.toPin);
+                    const arr = outputValues[w.fromId];
+                    const val = arr ? arr[w.fromPin] : 0;
+                    const midX = (p1.x + p2.x) / 2;
+                    const path = document.createElementNS(svgNS, 'path');
+                    path.setAttribute('d', `M${p1.x},${p1.y} C${midX},${p1.y} ${midX},${p2.y} ${p2.x},${p2.y}`);
+                    let cls = 'wire';
+                    if (val === 1) cls += ' on';
+                    if (val === null) cls += ' hz';
+                    if (w.id === selectedWireId) cls += ' selected';
+                    path.setAttribute('class', cls);
+                    path.addEventListener('pointerdown', e => { e.stopPropagation(); selectWire(w.id); });
+                    svg.appendChild(path);
+                });
+                if (draftWire) {
+                    const p1 = draftWire.p1, p2 = draftWire.p2;
+                    const midX = (p1.x + p2.x) / 2;
+                    const path = document.createElementNS(svgNS, 'path');
+                    path.setAttribute('d', `M${p1.x},${p1.y} C${midX},${p1.y} ${midX},${p2.y} ${p2.x},${p2.y}`);
+                    path.setAttribute('class', 'wire draft');
+                    svg.appendChild(path);
+                }
+            }
+
+            function renderVisuals() {
+                components.forEach(comp => {
+                    const el = compEls[comp.id];
+                    if (!el) return;
+                    if (comp.type === 'toggle' || comp.type === 'push') {
+                        el.classList.toggle('on', !!comp.state.value);
+                    }
+                    if (comp.type === 'clock') {
+                        el.classList.toggle('on', !!comp.state.value);
+                        el.classList.toggle('paused', !comp.state.running);
+                    }
+                    if (comp.type === 'bulb') {
+                        const ins = computeInputs(comp);
+                        el.classList.toggle('lit', !!ins[0]);
+                    }
+                    if (comp.type === 'disp4') {
+                        const ins = computeInputs(comp);
+                        let val = 0; ins.forEach((b, i) => val += (b ? 1 : 0) << i);
+                        el.querySelector('.digit').textContent = val.toString(16).toUpperCase();
+                    }
+                    if (comp.type === 'disp8') {
+                        const ins = computeInputs(comp);
+                        let val = 0; ins.forEach((b, i) => val += (b ? 1 : 0) << i);
+                        el.querySelector('.digit').textContent = val;
+                    }
+                });
+                renderWires();
+            }
+
+            function fullUpdate() {
+                tickClocks();
+                simulate();
+                renderVisuals();
+            }
+
+            setInterval(fullUpdate, 90);
+
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                components.slice().forEach(c => deleteComponent(c.id));
+                wires = [];
+                clearSelection();
+                fullUpdate();
+            });
+
+            function serializeProject() {
+                return JSON.stringify({
+                    app: 'logic-bench',
+                    version: 1,
+                    components: components.map(c => ({
+                        id: c.id,
+                        type: c.type,
+                        x: Math.round(c.x),
+                        y: Math.round(c.y),
+                        state: {
+                            value: c.state.value,
+                            running: c.state.running,
+                            period: c.state.period,
+                            text: c.state.text
+                        }
+                    })),
+                    wires: wires.map(w => ({ id: w.id, fromId: w.fromId, fromPin: w.fromPin, toId: w.toId, toPin: w.toPin }))
+                }, null, 2);
+            }
+
+            function downloadProject() {
+                const blob = new Blob([serializeProject()], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `logic-bench-${stamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+
+            function loadProject(data) {
+                if (!data || !Array.isArray(data.components)) throw new Error('bad file');
+
+                components.slice().forEach(c => deleteComponent(c.id));
+                wires = [];
+
+                let maxNum = 0;
+                data.components.forEach(cd => {
+                    if (!DEFS[cd.type]) return;
+                    const comp = { id: cd.id, type: cd.type, x: cd.x || 0, y: cd.y || 0, state: cd.state || {} };
+                    if (comp.type === 'toggle' || comp.type === 'push') { if (typeof comp.state.value !== 'number') comp.state.value = 0; }
+                    if (comp.type === 'high') comp.state.value = 1;
+                    if (comp.type === 'low') comp.state.value = 0;
+                    if (comp.type === 'clock') {
+                        comp.state.running = comp.state.running !== false;
+                        comp.state.period = comp.state.period || 1000;
+                        comp.state.value = comp.state.value || 0;
+                        comp.state.last = Date.now();
+                    }
+                    if (comp.type === 'label' && !comp.state.text) comp.state.text = 'Label';
+
+                    components.push(comp);
+                    compsById[comp.id] = comp;
+                    const el = buildComponentEl(comp);
+                    compEls[comp.id] = el;
+                    board.appendChild(el);
+
+                    if (comp.type === 'clock') {
+                        const per = el.querySelector('.clk-period');
+                        if (per) per.textContent = (comp.state.period / 1000).toFixed(2).replace(/0$/, '').replace(/\.$/, '') + 's';
+                    }
+
+                    const num = parseInt(String(comp.id).replace(/[^0-9]/g, ''), 10);
+                    if (!isNaN(num)) maxNum = Math.max(maxNum, num);
+                });
+
+                (data.wires || []).forEach(wd => {
+                    if (!compsById[wd.fromId] || !compsById[wd.toId]) return;
+                    wires.push({ id: wd.id, fromId: wd.fromId, fromPin: wd.fromPin, toId: wd.toId, toPin: wd.toPin });
+                    const num = parseInt(String(wd.id).replace(/[^0-9]/g, ''), 10);
+                    if (!isNaN(num)) maxNum = Math.max(maxNum, num);
+                });
+
+                idCounter = maxNum + 1;
+                clearSelection();
+                fullUpdate();
+            }
+
+            document.getElementById('saveBtn').addEventListener('click', downloadProject);
+
+            const loadInput = document.getElementById('loadInput');
+            document.getElementById('loadBtn').addEventListener('click', () => loadInput.click());
+            loadInput.addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    try {
+                        loadProject(JSON.parse(reader.result));
+                    } catch (err) {
+                        alert("Couldn't read that file — is it a Logic Bench save?");
+                    }
+                };
+                reader.readAsText(file);
+                loadInput.value = '';
+            });
+
+            fullUpdate();
+        })();
+    </script>
+
+</body>
+
+</html>

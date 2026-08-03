@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endless boxes - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --orange-dark: #E2531A;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            padding: 20px;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+            min-height: 420px;
+            align-items: center;
+        }
+
+        .btn {
+            position: absolute;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            border: none;
+            border-radius: 16px;
+            color: #fff;
+            background: var(--orange);
+            box-shadow: 0 6px 0 var(--ink);
+            cursor: pointer;
+            user-select: none;
+            transition: left .18s cubic-bezier(.34, 1.56, .64, 1), top .18s cubic-bezier(.34, 1.56, .64, 1), width .2s ease, height .2s ease, font-size .2s ease, background .15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 10px;
+            line-height: 1.1;
+        }
+
+        .btn:active {
+            box-shadow: 0 2px 0 var(--ink);
+            transform: translateY(4px);
+        }
+
+        .btn.decoy {
+            background: #fff;
+            color: var(--ink);
+            border: 2px solid var(--ink);
+            box-shadow: 0 6px 0 var(--line);
+            opacity: .85;
+        }
+
+        .toast {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--ink);
+            padding: 4px 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatUp 1s ease forwards;
+            z-index: 5;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.9);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 420px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .box {
+            position: relative;
+            border-radius: 20px;
+            align-self: center;
+            padding: 20px 24px;
+            margin: 10px auto;
+            width: 550px;
+
+            background: var(--orange-dark);
+            color: var(--bg);
+
+            border: 2px solid var(--ink);
+            box-shadow: 6px 6px 0 var(--ink);
+
+            transition:
+                transform .15s ease,
+                box-shadow .15s ease;
+        }
+
+        .box:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0 var(--ink);
+        }
+
+        .box label {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 18px;
+            margin-left: 12px;
+        }
+
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+
+            width: 28px;
+            height: 28px;
+
+            border: 3px solid var(--ink);
+            border-radius: 8px;
+
+            background: white;
+            cursor: pointer;
+
+            vertical-align: middle;
+            position: relative;
+
+            transition:
+                transform .1s ease,
+                background .15s ease;
+        }
+
+        input[type="checkbox"]:hover {
+            transform: scale(1.08);
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--orange);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            left: 6px;
+            top: 1px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">clicked: <span id="score">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Endless boxes</h1>
+        <div class="caption" id="caption">don't expect anything if you click them.</div>
+    </div>
+
+    <div id="arena">
+        <div id="boxs"></div>
+    </div>
+
+    <script>
+        const boxs = document.getElementById("boxs");
+        let count = 0;
+
+        function makebox() {
+            const containor = document.createElement("div");
+            containor.classList.add("box");
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = "checkbox" + count;
+
+            const label = document.createElement("label");
+            label.htmlFor = checkbox.id;
+            label.textContent = " Checkbox " + count;
+
+
+
+            containor.addEventListener("click", function () {
+                if (checkbox.checked && !containor.dataset.spawned) {
+                    containor.dataset.spawned = "true";
+                    makebox();
+                }
+            });
+            boxs.appendChild(containor);
+            containor.appendChild(checkbox);
+            containor.appendChild(label);
+            boxs.appendChild(document.createElement("br"));
+
+            count++;
+            document.getElementById("score").innerText = count - 1;
+        }
+        makebox()
+
+
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape The Popup - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --purple: #6C4CFF;
+            --green: #2E9E5B;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--purple);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(108, 76, 255, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+            min-height: 460px;
+        }
+
+        .dim {
+            position: absolute;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.08);
+            z-index: 1;
+        }
+
+        .popup {
+            position: absolute;
+            width: min(340px, 82%);
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            box-shadow: 0 6px 0 var(--ink);
+            overflow: visible;
+            z-index: 3;
+            animation: pop .25s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0.85);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .popup-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--ink);
+            color: #fff;
+            padding: 9px 12px;
+            border-radius: 14px 14px 0 0;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+        }
+
+        .popup-bar .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--orange);
+            display: inline-block;
+        }
+
+        .popup-bar .dot:nth-child(2) {
+            background: var(--pink);
+        }
+
+        .popup-bar .dot:nth-child(3) {
+            background: var(--green);
+        }
+
+        .popup-bar span.label {
+            margin-left: 6px;
+            opacity: .8;
+        }
+
+        .popup-body {
+            padding: 22px 22px 20px;
+            position: relative;
+        }
+
+        .popup-body h3 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 19px;
+            margin: 0 0 8px;
+            padding-right: 20px;
+        }
+
+        .popup-body p {
+            margin: 0 0 18px;
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: var(--ink-soft);
+        }
+
+        .popup-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .popup-actions button {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            border: 2px solid var(--ink);
+            background: #fff;
+            color: var(--ink);
+            cursor: pointer;
+        }
+
+        .popup-actions button.primary {
+            background: var(--pink);
+            color: #fff;
+            border-color: var(--pink);
+        }
+
+        .popup-x {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--ink);
+            background: #fff;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 10px;
+            right: 10px;
+            transition: top .16s cubic-bezier(.34, 1.56, .64, 1), right .16s cubic-bezier(.34, 1.56, .64, 1), left .16s cubic-bezier(.34, 1.56, .64, 1);
+            z-index: 4;
+        }
+
+        .popup-x:hover {
+            background: var(--orange);
+            color: #fff;
+            border-color: var(--orange);
+        }
+
+        .toast {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--ink);
+            padding: 4px 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatUp 1s ease forwards;
+            z-index: 6;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.92);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 440px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--purple);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">closed: <span id="score">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Escape The Popup</h1>
+        <div class="caption" id="caption">just close it. that's all you have to do.</div>
+    </div>
+
+    <div id="arena">
+        <div class="dim"></div>
+    </div>
+
+    <div id="winOverlay">
+        <h2>you escaped.</h2>
+        <p>18 popups closed, 3 confirmed, and at least one confirmation about a confirmation. The cow apologizes. Sort
+            of.</p>
+        <button onclick="location.reload()">tempt fate again</button>
+    </div>
+
+    <script>
+        const arena = document.getElementById('arena');
+        const scoreEl = document.getElementById('score');
+        const captionEl = document.getElementById('caption');
+        const winOverlay = document.getElementById('winOverlay');
+
+        const TOTAL = 18;
+        let closed = 0;
+
+        const captions = [
+            "just close it. that's all you have to do.",
+            "one down. so many to go.",
+            "it's multiplying.",
+            "the x is getting shy.",
+            "wait, it moved.",
+            "you're chasing a button now.",
+            "it wants confirmation.",
+            "are you sure you want to close it?",
+            "are you sure about being sure?",
+            "this is a lot of consent for one popup.",
+            "the popups have unionized.",
+            "it's asking permission to ask permission.",
+            "you are so close.",
+            "one final, extremely defensive popup.",
+            "it does not want to leave.",
+            "almost. it can feel it.",
+            "last one. it knows.",
+            "here it comes."
+        ];
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+
+        function updateCaption() {
+            captionEl.style.opacity = 0;
+            setTimeout(() => {
+                captionEl.textContent = captions[Math.min(closed, captions.length - 1)];
+                captionEl.style.opacity = 1;
+            }, 100);
+        }
+
+        function showToast(x, y, text) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = text;
+            t.style.left = x + 'px';
+            t.style.top = y + 'px';
+            arena.appendChild(t);
+            setTimeout(() => t.remove(), 1000);
+        }
+
+        function placePopup(el, w, h) {
+            const r = arena.getBoundingClientRect();
+            const x = rand(10, Math.max(10, r.width - w - 10));
+            const y = rand(10, Math.max(10, r.height - h - 10));
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+        }
+
+        function markComplete() {
+            closed++;
+            scoreEl.textContent = closed;
+            updateCaption();
+            if (closed >= TOTAL) {
+                setTimeout(() => { winOverlay.style.display = 'flex'; }, 350);
+            } else {
+                setTimeout(spawnStage, 260);
+            }
+        }
+
+        function makePopupShell(titleText, bodyText) {
+            const p = document.createElement('div');
+            p.className = 'popup';
+            p.innerHTML = `
+                <div class="popup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="label">system-notice.exe</span></div>
+                <div class="popup-body">
+                    <h3>${titleText}</h3>
+                    <p>${bodyText}</p>
+                    <div class="popup-actions"></div>
+                </div>
+            `;
+            return p;
+        }
+
+        function stageSimple() {
+            const p = makePopupShell('A friendly popup', 'Nothing suspicious here. Just click the X to close me.');
+            arena.appendChild(p);
+            placePopup(p, 300, 150);
+            const x = document.createElement('button');
+            x.className = 'popup-x';
+            x.textContent = '✕';
+            p.appendChild(x);
+            x.addEventListener('click', () => {
+                showToast(parseFloat(p.style.left) + 260, parseFloat(p.style.top), 'closed');
+                p.remove();
+                markComplete();
+            });
+        }
+
+        function stageMoving() {
+            const p = makePopupShell('This one is trickier', 'The X does not want to be found. Chase it.');
+            arena.appendChild(p);
+            placePopup(p, 300, 150);
+            const x = document.createElement('button');
+            x.className = 'popup-x';
+            x.textContent = '✕';
+            p.appendChild(x);
+            let dodges = 0;
+            const maxDodges = 5;
+            x.addEventListener('mouseenter', () => {
+                if (dodges >= maxDodges) return;
+                dodges++;
+                const pw = p.offsetWidth, ph = p.offsetHeight;
+                x.style.top = rand(6, ph - 36) + 'px';
+                x.style.right = 'auto';
+                x.style.left = rand(6, pw - 36) + 'px';
+            });
+            x.addEventListener('click', () => {
+                showToast(parseFloat(p.style.left) + 260, parseFloat(p.style.top), 'gotcha');
+                p.remove();
+                markComplete();
+            });
+        }
+
+        function stageConfirm(depth) {
+            renderConfirm(depth, depth);
+        }
+
+        function renderConfirm(depth, maxDepth) {
+            let title, body;
+            if (depth === maxDepth) {
+                title = 'Close this popup?';
+                body = 'This action cannot be undone. Are you sure you want to close this popup?';
+            } else {
+                title = 'Please confirm your confirmation';
+                body = `You said yes ${maxDepth - depth} time(s) already. We just want to be really, really sure.`;
+            }
+            const p = makePopupShell(title, body);
+            arena.appendChild(p);
+            placePopup(p, 320, 170);
+            const actions = p.querySelector('.popup-actions');
+            const no = document.createElement('button');
+            no.textContent = depth === maxDepth ? 'No' : 'Not sure';
+            const yes = document.createElement('button');
+            yes.className = 'primary';
+            yes.textContent = depth === maxDepth ? 'Yes' : 'Confirm';
+            actions.appendChild(no);
+            actions.appendChild(yes);
+
+            no.addEventListener('click', () => {
+                showToast(parseFloat(p.style.left) + 260, parseFloat(p.style.top), 'not so fast');
+                p.remove();
+                renderConfirm(depth, maxDepth);
+            });
+
+            yes.addEventListener('click', () => {
+                p.remove();
+                if (depth > 0) {
+                    renderConfirm(depth - 1, maxDepth);
+                } else {
+                    showToast(200, 200, 'finally closed');
+                    markComplete();
+                }
+            });
+        }
+
+        function stageFinal() {
+            const p = makePopupShell('One last popup', 'This one really, really does not want to close. Keep trying.');
+            arena.appendChild(p);
+            placePopup(p, 320, 160);
+            const x = document.createElement('button');
+            x.className = 'popup-x';
+            x.textContent = '✕';
+            p.appendChild(x);
+            let teleports = 4;
+            x.addEventListener('click', (e) => {
+                if (teleports > 0) {
+                    teleports--;
+                    const pw = p.offsetWidth, ph = p.offsetHeight;
+                    x.style.top = rand(6, ph - 36) + 'px';
+                    x.style.right = 'auto';
+                    x.style.left = rand(6, pw - 36) + 'px';
+                    showToast(parseFloat(p.style.left) + 260, parseFloat(p.style.top), 'nope');
+                    return;
+                }
+                showToast(parseFloat(p.style.left) + 260, parseFloat(p.style.top), 'escaped!');
+                p.remove();
+                markComplete();
+            });
+        }
+
+        function spawnStage() {
+            arena.querySelectorAll('.popup').forEach(p => p.remove());
+            if (closed < 3) stageSimple();
+            else if (closed < 7) stageMoving();
+            else if (closed < 12) stageConfirm(1);
+            else if (closed < 16) stageConfirm(2);
+            else stageFinal();
+        }
+
+        spawnStage();
+
+        window.addEventListener('resize', () => {
+            const p = arena.querySelector('.popup');
+            if (p) placePopup(p, p.offsetWidth, p.offsetHeight);
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Don't Press Anything - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --red: #E23B3B;
+            --green: #2E9E5B;
+            --purple: #6C4CFF;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background .6s ease, filter .3s ease;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--purple);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            gap: 18px;
+        }
+
+        .timer {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(60px, 12vw, 110px);
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .instruction {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 16px;
+            color: var(--ink-soft);
+        }
+
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.94);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #overlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 7vw, 58px);
+            margin: 0 0 14px;
+        }
+
+        #overlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 440px;
+            color: #ddd;
+            margin: 0 0 26px;
+        }
+
+        #overlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+            background: var(--purple);
+            border-color: var(--purple);
+        }
+
+        body.win-spin {
+            animation: spin-hue 3s linear infinite;
+        }
+
+        @keyframes spin-hue {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            top: -10px;
+            border-radius: 2px;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(360deg);
+                opacity: 0.4;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">attempts: <span id="attempts">1</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Don't Press Anything</h1>
+        <div class="caption" id="caption">exactly what it sounds like.</div>
+    </div>
+
+    <div id="arena">
+        <div class="instruction">Don't touch anything. Don't move your mouse. Just... wait.</div>
+        <div class="timer" id="timer">0.0</div>
+        <div class="instruction" id="sub">timer starts the moment you stop moving.</div>
+    </div>
+
+    <div id="overlay">
+        <h2 id="overlayTitle">FAILED</h2>
+        <p id="overlayText">You moved. The cow saw everything.</p>
+        <button onclick="location.reload()">try again</button>
+    </div>
+
+    <script>
+        const arena = document.getElementById('arena');
+        const timerEl = document.getElementById('timer');
+        const captionEl = document.getElementById('caption');
+        const subEl = document.getElementById('sub');
+        const attemptsEl = document.getElementById('attempts');
+        const overlay = document.getElementById('overlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayText = document.getElementById('overlayText');
+
+        let attempts = 1;
+        let started = false;
+        let startTime = null;
+        let lastX = null, lastY = null;
+        let armed = false;
+        let done = false;
+        let rafId = null;
+
+        const GOAL = 30;
+
+        function fail(reason) {
+            if (done) return;
+            done = true;
+            cancelAnimationFrame(rafId);
+            overlayTitle.textContent = 'FAILED';
+            overlayText.textContent = reason;
+            overlay.style.display = 'flex';
+        }
+
+        function win() {
+            if (done) return;
+            done = true;
+            cancelAnimationFrame(rafId);
+            document.body.classList.add('win-spin');
+            for (let i = 0; i < 60; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.background = ['#FF6B2C', '#FF4FA0', '#6C4CFF', '#2E9E5B', '#FFC93C'][Math.floor(Math.random() * 5)];
+                c.style.animationDuration = (2 + Math.random() * 2) + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 4500);
+            }
+            setTimeout(() => {
+                overlayTitle.textContent = 'you waited. weird.';
+                overlayText.textContent = 'You survived 30 seconds of doing absolutely nothing. The cow is deeply unsettled by your patience.';
+                overlay.style.display = 'flex';
+            }, 1200);
+        }
+
+        function tick() {
+            if (done) return;
+            if (started) {
+                const elapsed = (Date.now() - startTime) / 1000;
+                timerEl.textContent = elapsed.toFixed(1);
+                if (elapsed >= GOAL) { win(); return; }
+                if (elapsed > 20) captionEl.textContent = "almost there. do not blink.";
+                else if (elapsed > 10) captionEl.textContent = "this is taking a psychological toll.";
+                else if (elapsed > 3) captionEl.textContent = "good. stay still.";
+            }
+            rafId = requestAnimationFrame(tick);
+        }
+
+        setTimeout(() => {
+            armed = true;
+            subEl.textContent = "timer is live. do not move.";
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mousedown', onPress);
+            document.addEventListener('keydown', onPress);
+            document.addEventListener('touchstart', onPress);
+            document.addEventListener('wheel', onPress);
+        }, 900);
+
+        function onMove(e) {
+            if (!armed || done) return;
+            if (lastX === null) { lastX = e.clientX; lastY = e.clientY; return; }
+            const d = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+            if (d < 2) return;
+            if (!started) {
+                started = true;
+                startTime = Date.now();
+                tick();
+                return;
+            }
+            fail('You moved the mouse. The timer saw it.');
+        }
+
+        function onPress(e) {
+            if (!armed || done) return;
+            fail('You pressed something. That was the one rule.');
+        }
+
+        setTimeout(() => {
+            if (!started && !done) {
+                started = true;
+                startTime = Date.now();
+                tick();
+            }
+        }, 1500);
+    </script>
+
+</body>
+
+</html>

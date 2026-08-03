@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Versus Everyone - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --blue: #2F6FED;
+            --blue-dark: #1E4FC4;
+            --red: #E23B3B;
+            --red-dark: #B92B2B;
+            --neutral: #B9B6AC;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+            position: relative;
+            z-index: 10;
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--blue);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+            transition: background .3s ease;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 0 20px 8px;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(26px, 5vw, 42px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            min-height: 18px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 6px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            background: var(--bg);
+            min-height: 380px;
+        }
+
+        .node {
+            position: absolute;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 3px solid var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 500;
+            font-size: 15px;
+            color: #fff;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: box-shadow .15s ease, transform .15s ease, background .25s ease, border-color .25s ease;
+            box-shadow: 3px 3px 0 var(--ink);
+            user-select: none;
+            z-index: 2;
+        }
+
+        .node.blue {
+            background: var(--blue);
+        }
+
+        .node.red {
+            background: var(--red);
+        }
+
+        .node.neutral {
+            background: var(--neutral);
+            color: var(--ink);
+        }
+
+        .node:hover {
+            transform: translate(-50%, -50%) scale(1.06);
+        }
+
+        .node.selected {
+            box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--ink);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .node.pulse {
+            animation: pulse .5s ease;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1.35);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .convoy {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--ink);
+            z-index: 3;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .convoy.blue {
+            background: var(--blue);
+        }
+
+        .convoy.red {
+            background: var(--red);
+        }
+
+        .toast {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11.5px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--ink);
+            padding: 3px 9px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatUp 1.3s ease forwards;
+            z-index: 5;
+            white-space: nowrap;
+            transform: translate(-50%, -100%);
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -100%);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -160%);
+            }
+        }
+
+        .hint {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(253, 252, 246, 0.9);
+            padding: 5px 12px;
+            border-radius: 999px;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.92);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #overlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(28px, 6vw, 48px);
+            margin: 0 0 14px;
+        }
+
+        #overlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 440px;
+            color: #ddd;
+            margin: 0 0 26px;
+            line-height: 1.5;
+            font-size: 13.5px;
+        }
+
+        #overlay .row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #overlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+            background: transparent;
+        }
+
+        #overlay button.primary {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+
+        #overlay button.primary.lose {
+            background: var(--red);
+            border-color: var(--red);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">territory: <span id="scoreVal">1</span>/13</div>
+    </header>
+
+    <div class="title-block">
+        <h1>Blue Versus Everyone</h1>
+        <div class="caption" id="caption">one dot. twelve problems.</div>
+    </div>
+
+    <div id="arena">
+        <div class="hint">click a blue dot, then click a target · new man every 10s</div>
+    </div>
+
+    <div id="overlay">
+        <h2>ready?</h2>
+        <p>One blue dot versus a ring of red. New men arrive every 10 seconds. Take the board.</p>
+        <div class="row">
+            <button class="primary" id="pickWin">start</button>
+        </div>
+    </div>
+
+    <script>
+        const arena = document.getElementById('arena');
+        const scoreVal = document.getElementById('scoreVal');
+        const captionEl = document.getElementById('caption');
+        const overlay = document.getElementById('overlay');
+        const scoreTag = document.querySelector('.score-tag');
+
+        let gameOver = false;
+
+        document.getElementById('pickWin').addEventListener('click', () => startGame());
+
+        function startGame() {
+            overlay.classList.add('hidden');
+            layoutNodes();
+            growTimer = setInterval(growAll, 10000);
+            aiTimer = setInterval(aiMove, 4200);
+            updateCaption();
+        }
+
+        const nodes = [
+            { id: 'home', x: 50, y: 50, owner: 'blue', troops: 25 },
+        ];
+        const neutralAngles = [45, 135, 225, 315];
+        neutralAngles.forEach((a, i) => {
+            const rad = a * Math.PI / 180;
+            nodes.push({
+                id: 'n' + i,
+                x: 50 + 22 * Math.cos(rad),
+                y: 50 + 22 * Math.sin(rad) * 0.85,
+                owner: 'neutral',
+                troops: 4
+            });
+        });
+        const redAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+        redAngles.forEach((a, i) => {
+            const rad = a * Math.PI / 180;
+            nodes.push({
+                id: 'r' + i,
+                x: 50 + 40 * Math.cos(rad),
+                y: 50 + 40 * Math.sin(rad) * 0.85,
+                owner: 'red',
+                troops: 3
+            });
+        });
+
+        const totalNodes = nodes.length;
+        let selectedId = null;
+        let growTimer = null;
+        let aiTimer = null;
+
+        const nodeEls = {};
+        nodes.forEach(n => {
+            const el = document.createElement('div');
+            el.className = 'node ' + n.owner;
+            el.dataset.id = n.id;
+            el.textContent = n.troops;
+            el.addEventListener('click', () => handleNodeClick(n.id));
+            arena.appendChild(el);
+            nodeEls[n.id] = el;
+        });
+
+        function layoutNodes() {
+            const r = arena.getBoundingClientRect();
+            nodes.forEach(n => {
+                const el = nodeEls[n.id];
+                el.style.left = (r.width * n.x / 100) + 'px';
+                el.style.top = (r.height * n.y / 100) + 'px';
+            });
+        }
+        layoutNodes();
+        window.addEventListener('resize', layoutNodes);
+
+        function getNode(id) { return nodes.find(n => n.id === id); }
+
+        function refreshNode(n) {
+            const el = nodeEls[n.id];
+            el.textContent = n.troops;
+            el.className = 'node ' + n.owner + (n.id === selectedId ? ' selected' : '');
+        }
+
+        function refreshAll() {
+            nodes.forEach(refreshNode);
+            const blueCount = nodes.filter(n => n.owner === 'blue').length;
+            scoreVal.textContent = blueCount;
+        }
+        refreshAll();
+
+        function showToast(x, y, text) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = text;
+            t.style.left = x + 'px';
+            t.style.top = y + 'px';
+            arena.appendChild(t);
+            setTimeout(() => t.remove(), 1300);
+        }
+
+        const captionSteps = [
+            "one dot. twelve problems.",
+            "the ring tightens.",
+            "somebody's losing men.",
+            "keep sending. keep watching.",
+            "the red side is thinking.",
+            "this is a lot of dots.",
+            "morale: uncertain.",
+            "the cow is taking notes."
+        ];
+        let captionIdx = 0;
+        function updateCaption() {
+            captionEl.textContent = captionSteps[captionIdx % captionSteps.length];
+            captionIdx++;
+        }
+
+        function handleNodeClick(id) {
+            if (gameOver) return;
+            const n = getNode(id);
+            if (selectedId === null) {
+                if (n.owner === 'blue' && n.troops > 1) {
+                    selectedId = id;
+                    refreshAll();
+                } else if (n.owner === 'blue') {
+                    showToast(nodeEls[id].offsetLeft, nodeEls[id].offsetTop, 'needs more men');
+                }
+                return;
+            }
+            if (id === selectedId) {
+                selectedId = null;
+                refreshAll();
+                return;
+            }
+            const src = getNode(selectedId);
+            if (src.owner !== 'blue' || src.troops <= 1) {
+                selectedId = null;
+                refreshAll();
+                return;
+            }
+            const sendTroops = src.troops - 1;
+            src.troops = 1;
+            selectedId = null;
+            refreshAll();
+            sendConvoy(src, n, sendTroops, 'blue');
+        }
+
+        function distance(a, b) {
+            const r = arena.getBoundingClientRect();
+            const ax = r.width * a.x / 100, ay = r.height * a.y / 100;
+            const bx = r.width * b.x / 100, by = r.height * b.y / 100;
+            return Math.hypot(ax - bx, ay - by);
+        }
+
+        function sendConvoy(from, to, troops, owner) {
+            const r = arena.getBoundingClientRect();
+            const el = document.createElement('div');
+            el.className = 'convoy ' + owner;
+            const fx = r.width * from.x / 100, fy = r.height * from.y / 100;
+            const tx = r.width * to.x / 100, ty = r.height * to.y / 100;
+            el.style.left = fx + 'px';
+            el.style.top = fy + 'px';
+            arena.appendChild(el);
+
+            const dist = Math.hypot(tx - fx, ty - fy);
+            const duration = Math.min(2200, Math.max(500, dist * 3.2));
+            el.style.transition = `left ${duration}ms linear, top ${duration}ms linear`;
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    el.style.left = tx + 'px';
+                    el.style.top = ty + 'px';
+                });
+            });
+
+            setTimeout(() => {
+                el.remove();
+                resolveArrival(to.id, troops, owner);
+            }, duration + 30);
+        }
+
+        function resolveArrival(targetId, troops, owner) {
+            if (gameOver) return;
+            const t = getNode(targetId);
+            const el = nodeEls[targetId];
+
+            if (t.owner === owner) {
+                t.troops += troops;
+            } else if (troops > t.troops) {
+                t.owner = owner;
+                t.troops = troops - t.troops;
+            } else {
+                t.troops -= troops;
+                if (t.troops < 1) t.troops = 1;
+            }
+
+            refreshNode(t);
+            el.classList.remove('pulse');
+            void el.offsetWidth;
+            el.classList.add('pulse');
+            checkGameOver();
+            const blueCount = nodes.filter(n => n.owner === 'blue').length;
+            scoreVal.textContent = blueCount;
+        }
+
+        function aiMove() {
+            if (gameOver) return;
+            const redNodes = nodes.filter(n => n.owner === 'red' && n.troops > 1);
+            if (!redNodes.length) return;
+            const src = redNodes[Math.floor(Math.random() * redNodes.length)];
+            const targets = nodes.filter(n => n.id !== src.id && n.owner !== 'red');
+            if (!targets.length) return;
+            targets.sort((a, b) => (a.troops - distance(src, a) * 0.001) - (b.troops - distance(src, b) * 0.001));
+            const target = targets[0];
+            const send = src.troops - 1;
+            if (send < 1) return;
+            src.troops = 1;
+            refreshNode(src);
+            sendConvoy(src, target, send, 'red');
+            updateCaption();
+        }
+
+        function growAll() {
+            if (gameOver) return;
+            nodes.forEach(n => {
+                if (n.owner === 'blue' || n.owner === 'red') n.troops += 1;
+            });
+            refreshAll();
+        }
+
+        function checkGameOver() {
+            const blueCount = nodes.filter(n => n.owner === 'blue').length;
+            const redCount = nodes.filter(n => n.owner === 'red').length;
+
+            if (blueCount === totalNodes) {
+                endGame(true);
+            } else if (blueCount === 0) {
+                endGame(false);
+            } else if (redCount === 0 && blueCount < totalNodes) {
+                endGame(true);
+            }
+        }
+
+        function endGame(won) {
+            gameOver = true;
+            clearInterval(growTimer);
+            clearInterval(aiTimer);
+            scoreTag.style.background = won ? 'var(--blue)' : 'var(--red)';
+
+            const h2 = document.createElement('h2');
+            h2.textContent = won ? 'BLUE TAKES THE BOARD' : 'RED TAKES THE BOARD';
+            const p = document.createElement('p');
+            p.textContent = won
+                ? "You took the whole board. Not bad for one dot."
+                : "Red took the board. Reinforcements arrive every 10 seconds - try spreading your attacks earlier next time.";
+            const row = document.createElement('div');
+            row.className = 'row';
+            const btn = document.createElement('button');
+            btn.className = 'primary' + (won ? '' : ' lose');
+            btn.textContent = 'try again';
+            btn.onclick = () => location.reload();
+            row.appendChild(btn);
+
+            overlay.innerHTML = '';
+            overlay.appendChild(h2);
+            overlay.appendChild(p);
+            overlay.appendChild(row);
+            overlay.classList.remove('hidden');
+        }
+    </script>
+
+</body>
+
+</html>

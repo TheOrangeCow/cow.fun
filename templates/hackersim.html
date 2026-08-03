@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker Simulator - cow.fun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --lime: #3CE07A;
+            --term-bg: #0B0F0C;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: var(--lime);
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 460px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--term-bg);
+        }
+
+        .terminal {
+            width: min(520px, 100%);
+            padding: 30px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--lime);
+        }
+
+        .term-line {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .term-line .k {
+            color: #7a8a80;
+        }
+
+        .level-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(60, 224, 122, 0.15);
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 6px 0 20px;
+        }
+
+        .level-fill {
+            height: 100%;
+            background: var(--lime);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .field-row input {
+            flex: 1;
+            background: #000;
+            border: 1px solid var(--lime);
+            color: var(--lime);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 15px;
+            padding: 10px 14px;
+            border-radius: 6px;
+        }
+
+        .field-row input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(60, 224, 122, 0.4);
+        }
+
+        .field-row button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--lime);
+            color: #06120a;
+            border: none;
+            border-radius: 6px;
+            padding: 0 18px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .hint-box {
+            font-size: 12.5px;
+            color: #7a8a80;
+            border: 1px dashed rgba(60, 224, 122, 0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .feedback {
+            font-size: 13.5px;
+            min-height: 20px;
+            margin-bottom: 6px;
+        }
+
+        .feedback.deny {
+            color: #ff5f5f;
+        }
+
+        .feedback.grant {
+            color: var(--lime);
+        }
+
+        .attempts {
+            font-size: 11.5px;
+            color: #5c6b62;
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 15, 12, 0.95);
+            color: var(--lime);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+            color: var(--lime);
+        }
+
+        #winOverlay p {
+            max-width: 440px;
+            color: #a9d9b8;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--lime);
+            color: #06120a;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">level: <span id="scoreLevel">1</span>/50</div>
+    </header>
+
+    <div class="title-block">
+        <h1>Hacker Simulator</h1>
+        <div class="caption" id="caption">the password is always the opposite of the username. always.</div>
+    </div>
+
+    <div id="arena">
+        <div class="terminal">
+            <div class="term-line"><span class="k">TARGET ACCOUNT:</span> <span id="username"></span></div>
+            <div class="level-bar">
+                <div class="level-fill" id="levelFill"></div>
+            </div>
+            <div class="hint-box" id="hintBox"></div>
+            <div class="field-row">
+                <input type="text" id="passInput" autocomplete="off" placeholder="enter password" />
+                <button id="hackBtn">hack</button>
+            </div>
+            <div class="feedback" id="feedback"></div>
+            <div class="attempts">attempts this level: <span id="attemptsCount">0</span></div>
+        </div>
+    </div>
+
+    <div id="winOverlay">
+        <h2>SYSTEM FULLY BREACHED</h2>
+        <p>50 accounts, 50 opposites, zero real security anywhere. You are now, unfortunately, the world's foremost
+            expert in fake hacking.</p>
+        <button onclick="location.reload()">hack it all again</button>
+    </div>
+
+    <script>
+        const usernameEl = document.getElementById('username');
+        const levelFill = document.getElementById('levelFill');
+        const hintBox = document.getElementById('hintBox');
+        const passInput = document.getElementById('passInput');
+        const hackBtn = document.getElementById('hackBtn');
+        const feedback = document.getElementById('feedback');
+        const scoreLevel = document.getElementById('scoreLevel');
+        const attemptsCount = document.getElementById('attemptsCount');
+        const captionEl = document.getElementById('caption');
+        const winOverlay = document.getElementById('winOverlay');
+
+        const pairs = [
+            ["hot", "cold"], ["day", "night"], ["up", "down"], ["black", "white"],
+            ["big", "small"], ["fast", "slow"], ["love", "hate"], ["yes", "no"],
+            ["open", "closed"], ["true", "false"], ["north", "south"], ["sun", "moon"],
+            ["fire", "water"], ["king", "queen"], ["life", "death"], ["win", "lose"],
+            ["start", "finish"], ["empty", "full"], ["light", "dark"], ["wet", "dry"],
+            ["old", "new"], ["first", "last"], ["inside", "outside"], ["push", "pull"],
+            ["buy", "sell"], ["wild", "tame"], ["rich", "poor"], ["brave", "coward"],
+            ["strong", "weak"], ["happy", "sad"], ["loud", "quiet"], ["sweet", "sour"],
+            ["clean", "dirty"], ["near", "far"], ["high", "low"], ["early", "late"],
+            ["wide", "narrow"], ["soft", "hard"], ["smooth", "rough"], ["giant", "tiny"]
+        ];
+
+        const leet = { a: '4', e: '3', i: '1', o: '0', s: '5', t: '7' };
+
+        function toLeet(word) {
+            return word.split('').map(c => leet[c.toLowerCase()] || c).join('');
+        }
+
+        function reverseStr(s) { return s.split('').reverse().join(''); }
+
+        function capFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+        function buildLevel(level) {
+            const idx = (level - 1) % pairs.length;
+            const [user, opp] = pairs[idx];
+            let password = opp;
+            let hint = "Opposite word, all lowercase.";
+
+            if (level <= 10) {
+                password = opp;
+                hint = "Opposite word, all lowercase. That's it.";
+            } else if (level <= 20) {
+                password = capFirst(opp);
+                hint = "Opposite word, with the first letter capitalized.";
+            } else if (level <= 30) {
+                password = opp + String(level);
+                hint = `Opposite word, followed by the level number (${level}).`;
+            } else if (level <= 40) {
+                password = reverseStr(opp);
+                hint = "Opposite word, spelled completely backwards.";
+            } else {
+                password = capFirst(toLeet(opp));
+                hint = "Opposite word, first letter capitalized, then leetspeak (a→4, e→3, i→1, o→0, s→5, t→7).";
+            }
+
+            return { user, password, hint };
+        }
+
+        let level = 1;
+        let current = buildLevel(level);
+        let attempts = 0;
+        const MAX_LEVEL = 50;
+
+        const captions = [
+            "the password is always the opposite of the username. always.",
+            "you're getting the hang of this.",
+            "the security here is, charitably, minimal.",
+            "it's getting trickier from here.",
+            "read the hint carefully. it's not lying.",
+            "you're a genuine menace at this point.",
+            "almost a real hacker. almost.",
+            "this is either very impressive or very concerning.",
+        ];
+
+        function renderLevel() {
+            usernameEl.textContent = current.user;
+            levelFill.style.width = ((level - 1) / MAX_LEVEL * 100) + '%';
+            hintBox.textContent = "HINT: " + current.hint;
+            scoreLevel.textContent = level;
+            attempts = 0;
+            attemptsCount.textContent = attempts;
+            feedback.textContent = '';
+            feedback.className = 'feedback';
+            passInput.value = '';
+            passInput.focus();
+            captionEl.textContent = captions[Math.min(Math.floor((level - 1) / 7), captions.length - 1)];
+        }
+
+        function tryHack() {
+            const guess = passInput.value.trim();
+            attempts++;
+            attemptsCount.textContent = attempts;
+
+            if (guess.toLowerCase() === current.password.toLowerCase()) {
+                feedback.textContent = "ACCESS GRANTED";
+                feedback.className = 'feedback grant';
+                if (level >= MAX_LEVEL) {
+                    setTimeout(() => { winOverlay.style.display = 'flex'; }, 500);
+                } else {
+                    setTimeout(() => {
+                        level++;
+                        current = buildLevel(level);
+                        renderLevel();
+                    }, 600);
+                }
+            } else {
+                feedback.textContent = "ACCESS DENIED";
+                feedback.className = 'feedback deny';
+            }
+        }
+
+        hackBtn.addEventListener('click', tryHack);
+        passInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') tryHack();
+        });
+
+        renderLevel();
+    </script>
+
+</body>
+
+</html>

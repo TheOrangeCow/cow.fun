@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Consequences - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --purple: #6C4CFF;
+            --pink: #FF4FA0;
+            --green: #2E9E5B;
+            --orange: #FF6B2C;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+            position: relative;
+            z-index: 10;
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .chaos-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--purple);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+            transition: background .3s ease;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 0 20px 10px;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(26px, 5vw, 42px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+        }
+
+        #viewport {
+            position: relative;
+            flex: 1;
+            margin: 6px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: grab;
+            background: var(--bg);
+            transition: filter .3s ease, background .6s ease;
+        }
+
+        #viewport.dragging {
+            cursor: grabbing;
+        }
+
+        #viewport.shake {
+            animation: shake .3s ease;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            20% {
+                transform: translate(-6px, 3px);
+            }
+
+            40% {
+                transform: translate(6px, -4px);
+            }
+
+            60% {
+                transform: translate(-4px, 4px);
+            }
+
+            80% {
+                transform: translate(4px, -2px);
+            }
+        }
+
+        #canvasInner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3000px;
+            height: 3000px;
+            will-change: transform;
+        }
+
+        .hint {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(253, 252, 246, 0.85);
+            padding: 5px 12px;
+            border-radius: 999px;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: pop .35s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .label {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--ink);
+            padding: 3px 9px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatUp 1.6s ease forwards;
+            z-index: 5;
+            white-space: nowrap;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.92);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #overlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 7vw, 58px);
+            margin: 0 0 14px;
+        }
+
+        #overlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 440px;
+            color: #ddd;
+            margin: 0 0 26px;
+        }
+
+        #overlay .row {
+            display: flex;
+            gap: 12px;
+        }
+
+        #overlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+            background: transparent;
+        }
+
+        #overlay button.primary {
+            background: var(--purple);
+            border-color: var(--purple);
+        }
+
+        body.invert {
+            filter: invert(1) hue-rotate(180deg);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="chaos-tag">chaos level: <span id="chaosVal">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Infinite Consequences</h1>
+        <div class="caption" id="caption">click anywhere. drag to look around.</div>
+    </div>
+
+    <div id="viewport">
+        <div id="canvasInner"></div>
+        <div class="hint">click = spawn · drag = pan</div>
+    </div>
+
+    <div id="overlay">
+        <h2>CHAOS ACHIEVED</h2>
+        <p>You clicked this into a full spiral. The cow warned you. It did not stop you.</p>
+        <div class="row">
+            <button onclick="document.getElementById('overlay').style.display='none';">keep going</button>
+            <button class="primary" onclick="location.reload()">reset</button>
+        </div>
+    </div>
+
+    <script>
+        const viewport = document.getElementById('viewport');
+        const inner = document.getElementById('canvasInner');
+        const chaosVal = document.getElementById('chaosVal');
+        const captionEl = document.getElementById('caption');
+        const overlay = document.getElementById('overlay');
+        const chaosTag = document.querySelector('.chaos-tag');
+
+        let panX = -1000, panY = -1200;
+        let clicks = 0;
+        let isDragging = false;
+        let dragStart = null;
+        let panStart = null;
+        let shapeCount = 0;
+        const MAX_SHAPES = 180;
+        let brokeReality = false;
+
+        const colors = ['#FF6B2C', '#FF4FA0', '#6C4CFF', '#2E9E5B', '#FFC93C', '#3CB6FF'];
+
+        const captions = [
+            "click anywhere. drag to look around.",
+            "innocent enough.",
+            "keep going.",
+            "getting a little crowded.",
+            "the shapes are multiplying.",
+            "you feel that? that's chaos, building.",
+            "the void notices you.",
+            "this was a mistake.",
+            "reality is now optional.",
+            "there is no turning back.",
+            "the canvas is judging you.",
+            "almost there.",
+            "you should probably stop.",
+            "you're not going to stop, are you."
+        ];
+
+        function updateCaption() {
+            const idx = Math.min(Math.floor(clicks / 2), captions.length - 1);
+            captionEl.textContent = captions[idx];
+        }
+
+        function clampPan() {
+            const vw = viewport.clientWidth, vh = viewport.clientHeight;
+            const minX = vw - inner.offsetWidth, minY = vh - inner.offsetHeight;
+            panX = Math.min(0, Math.max(minX, panX));
+            panY = Math.min(0, Math.max(minY, panY));
+        }
+
+        function applyPan() {
+            clampPan();
+            inner.style.transform = `translate(${panX}px, ${panY}px)`;
+        }
+        applyPan();
+
+        viewport.addEventListener('mousedown', (e) => {
+            isDragging = false;
+            dragStart = { x: e.clientX, y: e.clientY };
+            panStart = { x: panX, y: panY };
+            viewport.classList.add('dragging');
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!dragStart) return;
+            const dx = e.clientX - dragStart.x;
+            const dy = e.clientY - dragStart.y;
+            if (Math.hypot(dx, dy) > 5) isDragging = true;
+            if (isDragging) {
+                panX = panStart.x + dx;
+                panY = panStart.y + dy;
+                applyPan();
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (dragStart && !isDragging) {
+                handleClick(e);
+            }
+            dragStart = null;
+            viewport.classList.remove('dragging');
+        });
+
+        function handleClick(e) {
+            const r = viewport.getBoundingClientRect();
+            const x = e.clientX - r.left - panX;
+            const y = e.clientY - r.top - panY;
+            clicks++;
+            chaosVal.textContent = clicks;
+            updateCaption();
+            spawnShape(x, y, 0);
+
+            if (clicks >= 5 && clicks < 10 && Math.random() < 0.5) {
+                spawnShape(x + (Math.random() * 60 - 30), y + (Math.random() * 60 - 30), 0);
+            }
+            if (clicks >= 10) {
+                viewport.classList.remove('shake');
+                void viewport.offsetWidth;
+                viewport.classList.add('shake');
+            }
+            if (clicks >= 15 && Math.random() < 0.6) {
+                spawnLabel(x, y);
+            }
+            if (clicks >= 10) {
+                const hue = Math.min(60, (clicks - 10) * 4);
+                viewport.style.background = `hsl(${20 + hue}, 60%, ${96 - hue * 0.3}%)`;
+            }
+            if (clicks >= 20 && clicks < 30) {
+                scheduleChainReaction(x, y, 0);
+            }
+            if (clicks === 12) {
+                chaosTag.style.background = 'var(--pink)';
+            }
+            if (clicks === 22) {
+                chaosTag.style.background = 'var(--orange)';
+            }
+            if (clicks >= 30 && !brokeReality) {
+                brokeReality = true;
+                triggerRealityBreak();
+            }
+        }
+
+        function spawnShape(x, y, depth) {
+            if (shapeCount >= MAX_SHAPES) {
+                const old = inner.querySelector('.shape');
+                if (old) old.remove(); else shapeCount--;
+            }
+            const size = Math.min(90, 16 + clicks * 1.6 + Math.random() * 20);
+            const el = document.createElement('div');
+            el.className = 'shape';
+            el.style.width = size + 'px';
+            el.style.height = size + 'px';
+            el.style.left = (x - size / 2) + 'px';
+            el.style.top = (y - size / 2) + 'px';
+            el.style.background = colors[Math.floor(Math.random() * colors.length)];
+            el.style.opacity = 0.85;
+            if (clicks >= 6) {
+                el.style.borderRadius = Math.random() < 0.5 ? '50%' : (8 + Math.random() * 20) + 'px';
+                el.style.transform = `rotate(${Math.random() * 360}deg)`;
+            }
+            inner.appendChild(el);
+            shapeCount++;
+        }
+
+        function spawnLabel(x, y) {
+            const phrases = ['the void notices', 'oh no', 'why though', 'moo.', 'this escalated', 'send help', 'chaos +1', 'do it again'];
+            const l = document.createElement('div');
+            l.className = 'label';
+            l.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+            l.style.left = (x + 20) + 'px';
+            l.style.top = (y - 20) + 'px';
+            inner.appendChild(l);
+            setTimeout(() => l.remove(), 1600);
+        }
+
+        function scheduleChainReaction(x, y, depth) {
+            if (depth >= 2) return;
+            const delay = 500 + Math.random() * 800;
+            setTimeout(() => {
+                const n = 1 + Math.floor(Math.random() * 2);
+                for (let i = 0; i < n; i++) {
+                    const nx = x + (Math.random() * 100 - 50);
+                    const ny = y + (Math.random() * 100 - 50);
+                    spawnShape(nx, ny, depth + 1);
+                    if (Math.random() < 0.4) scheduleChainReaction(nx, ny, depth + 1);
+                }
+            }, delay);
+        }
+
+        function triggerRealityBreak() {
+            document.body.classList.add('invert');
+            setTimeout(() => document.body.classList.remove('invert'), 500);
+            setTimeout(() => { overlay.style.display = 'flex'; }, 550);
+        }
+
+        window.addEventListener('resize', applyPan);
+    </script>
+
+</body>
+
+</html>

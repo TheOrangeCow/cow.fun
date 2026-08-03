@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Signup Game - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --orange-dark: #E2531A;
+            --pink: #FF4FA0;
+            --purple: #6C4CFF;
+            --green: #2E9E5B;
+            --blue: #2F6FED;
+            --yellow: #FFC93C;
+            --line: rgba(23, 22, 26, 0.14);
+            --bad: #E23B3B;
+            --good: #2E9E5B;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 12% 20%, rgba(255, 107, 44, 0.10), transparent 28%),
+                radial-gradient(circle at 88% 70%, rgba(108, 76, 255, 0.10), transparent 30%),
+                var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+            gap: 12px;
+        }
+
+        a.back,
+        .pill {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+            white-space: nowrap;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .pill {
+            color: #fff;
+            background: var(--ink);
+            border-color: var(--ink);
+        }
+
+        main {
+            width: min(1060px, calc(100% - 28px));
+            margin: 0 auto 48px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 8px 10px 22px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(32px, 6vw, 58px);
+            line-height: 0.98;
+            margin: 0 0 10px;
+            letter-spacing: -0.9px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        .arena {
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.55);
+            padding: clamp(14px, 3vw, 26px);
+            display: grid;
+            grid-template-columns: minmax(280px, 420px) 1fr;
+            gap: 22px;
+            min-height: 560px;
+            box-shadow: 0 14px 40px rgba(23, 22, 26, 0.04);
+        }
+
+        @media (max-width: 850px) {
+            .arena {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 22px;
+            box-shadow: 6px 6px 0 var(--ink);
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::after {
+            content: '';
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            right: -46px;
+            top: -46px;
+            border-radius: 50%;
+            background: var(--orange);
+            opacity: .14;
+            pointer-events: none;
+        }
+
+        h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 28px;
+            margin: 0 0 8px;
+            letter-spacing: -0.4px;
+        }
+
+        .tiny {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--ink-soft);
+            font-size: 12px;
+            line-height: 1.45;
+            margin: 0 0 18px;
+        }
+
+        label {
+            display: block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            margin: 14px 0 7px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            padding: 13px 14px;
+            font: 500 16px 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            outline: none;
+            box-shadow: 3px 3px 0 var(--line);
+            transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+        }
+
+        input:focus {
+            border-color: var(--orange);
+            box-shadow: 4px 4px 0 var(--ink);
+            transform: translate(-1px, -1px);
+        }
+
+        .meter {
+            height: 14px;
+            background: var(--bg);
+            border: 2px solid var(--ink);
+            border-radius: 999px;
+            margin: 18px 0 10px;
+            overflow: hidden;
+        }
+
+        .meter>div {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--orange), var(--pink), var(--purple));
+            transition: width .25s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        button {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            border-radius: 999px;
+            padding: 12px 18px;
+            border: 2px solid var(--ink);
+            background: #fff;
+            color: var(--ink);
+            cursor: pointer;
+            box-shadow: 4px 4px 0 var(--ink);
+            transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+        }
+
+        button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--ink);
+        }
+
+        button:active {
+            transform: translate(0, 0);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        button.primary {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        button.good {
+            background: var(--good);
+            color: #fff;
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 3px 3px 0 var(--line);
+        }
+
+        .rules {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 650px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .rule {
+            display: grid;
+            grid-template-columns: 34px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 16px;
+            padding: 11px 12px;
+            box-shadow: 4px 4px 0 var(--line);
+            animation: pop .22s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        .rule.locked {
+            opacity: .54;
+            filter: grayscale(.8);
+            border-style: dashed;
+        }
+
+        .num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            background: var(--ink);
+            color: #fff;
+        }
+
+        .rule.good-rule .num {
+            background: var(--good);
+        }
+
+        .rule.bad-rule .num {
+            background: var(--bad);
+        }
+
+        .rule-text {
+            font-size: 14px;
+            line-height: 1.35;
+        }
+
+        .rule-extra {
+            margin-top: 10px;
+        }
+
+        .rule-extra img {
+            display: block;
+            width: 100%;
+            max-width: 260px;
+            border-radius: 12px;
+            border: 2px solid var(--ink);
+        }
+
+        .rule-extra .swatch {
+            width: 90px;
+            height: 90px;
+            border-radius: 12px;
+            border: 2px solid var(--ink);
+        }
+
+        .rule-extra.hacker-note {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            line-height: 1.55;
+            background: var(--ink);
+            color: #6CFF95;
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 2px solid var(--ink);
+        }
+
+        .status {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 18px;
+        }
+
+        .good-rule .status {
+            color: var(--good);
+        }
+
+        .bad-rule .status {
+            color: var(--bad);
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 26px;
+            transform: translateX(-50%);
+            background: var(--ink);
+            color: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 14px;
+            padding: 10px 16px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            display: none;
+            z-index: 40;
+            max-width: min(92vw, 560px);
+            text-align: center;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+            background: rgba(23, 22, 26, .92);
+            color: #fff;
+            z-index: 50;
+        }
+
+        .overlay.show {
+            display: flex;
+        }
+
+        .overlay h2 {
+            font-size: clamp(32px, 7vw, 62px);
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .overlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 560px;
+            color: #ddd;
+            line-height: 1.5;
+        }
+
+        .overlay button {
+            color: #fff;
+            border-color: #fff;
+            background: var(--orange);
+        }
+
+        .hint-card {
+            margin-top: 16px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--bg);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--ink-soft);
+        }
+
+        code {
+            background: rgba(23, 22, 26, .08);
+            padding: 1px 5px;
+            border-radius: 6px;
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(.97);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="pill">rules beaten: <span id="score">0</span>/30</div>
+    </header>
+
+    <main>
+        <div class="title-block">
+            <h1>The Signup Game</h1>
+            <div class="caption" id="caption">make an account. regret starts at rule 1.</div>
+        </div>
+
+        <section class="arena">
+            <div class="panel">
+                <div id="signupScreen" class="screen active">
+                    <h2>Sign up</h2>
+                    <p class="tiny">Your username and password are saved in localStorage and cookies after every key
+                        press, so reloading halfway through should keep your chaos intact.</p>
+
+                    <label for="username">username</label>
+                    <input id="username" autocomplete="off" spellcheck="false" placeholder="make it weird" />
+
+                    <label for="password">password</label>
+                    <input id="password" autocomplete="off" spellcheck="false" placeholder="make it worse" />
+
+                    <div class="meter">
+                        <div id="bar"></div>
+                    </div>
+                    <div class="progress-text"><span id="ruleSummary">0 rules complete</span><span
+                            id="wordleStatus">wordle: loading...</span></div>
+
+                    <div class="button-row">
+                        <button class="primary" id="createBtn" disabled>Create account</button>
+                        <button id="resetBtn">reset</button>
+                    </div>
+
+                    <div class="hint-card">
+                        Tip: this is intentionally silly. Passwords are stored as plain text because it is a local-only
+                        browser toy, not a real account system.
+                    </div>
+
+                </div>
+
+                <div id="loginScreen" class="screen">
+                    <h2>Log in</h2>
+                    <p class="tiny">Final step: prove you remember what you created. The cow is deeply suspicious.</p>
+
+                    <label for="loginUsername">username</label>
+                    <input id="loginUsername" autocomplete="off" spellcheck="false" />
+
+                    <label for="loginPassword">password</label>
+                    <input id="loginPassword" autocomplete="off" spellcheck="false" />
+
+                    <div class="button-row">
+                        <button class="primary" id="loginBtn">log in</button>
+                        <button id="backBtn">back to signup</button>
+                        <button id="resetBtn2">reset</button>
+                    </div>
+
+                    <div class="hint-card" id="loginHint">No peeking. Unless you reload, then the browser remembers
+                        everything anyway.</div>
+                </div>
+            </div>
+
+            <div class="rules" id="rules"></div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="overlay" id="winOverlay">
+        <h2>ACCOUNT ACHIEVED</h2>
+        <p>You signed up, survived 30 increasingly unreasonable rules, then logged in. This is either good security or a
+            crime against forms.</p>
+        <button onclick="hardReset()">play again</button>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'cowfunSignupGameV1';
+        const COOKIE_KEY = 'cowfunSignupGameV1';
+
+        const $ = (id) => document.getElementById(id);
+        const usernameEl = $('username');
+        const passwordEl = $('password');
+        const rulesEl = $('rules');
+        const scoreEl = $('score');
+        const barEl = $('bar');
+        const captionEl = $('caption');
+        const summaryEl = $('ruleSummary');
+        const wordleStatusEl = $('wordleStatus');
+        const createBtn = $('createBtn');
+        const loginScreen = $('loginScreen');
+        const signupScreen = $('signupScreen');
+        const toastEl = $('toast');
+
+        let wordleAnswer = null;
+        let wordleProblem = false;
+        let currentVisible = 1;
+
+        const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'black', 'white', 'brown'];
+        const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        const elements = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Fe', 'Cu', 'Zn', 'Ag', 'Au', 'Hg', 'Pb', 'Sn', 'I', 'Xe', 'U'];
+        const cowWords = ['moo', 'cow', 'cattle', 'beef'];
+        const chess = /[♔♕♖♗♘♙♚♛♜♝♞♟]/;
+        const flags = /(?:[\u{1F1E6}-\u{1F1FF}]){2}/u;
+        const emoji = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+
+        const captchaText =
+            Math.random()
+                .toString(36)
+                .substring(2, 8)
+                .toUpperCase();
+
+        const captchaCanvas = document.createElement('canvas');
+        captchaCanvas.width = 180;
+        captchaCanvas.height = 60;
+
+        const ctx = captchaCanvas.getContext("2d");
+
+        ctx.fillStyle = "#eee";
+        ctx.fillRect(0, 0, 180, 60);
+
+        ctx.font = "32px Arial";
+
+        ctx.fillStyle = "black";
+
+        ctx.fillText(
+            captchaText,
+            20,
+            40
+        );
+
+        const captchaImageData = captchaCanvas.toDataURL();
+
+        const challengeColour =
+            '#' + Math.floor(Math.random() * 16777215)
+                .toString(16)
+                .padStart(6, '0')
+                .toUpperCase();
+
+        const landmarks = [
+            {
+                answer: "tower bridge",
+                image: "static/images/tower_bridge.png"
+            },
+            {
+                answer: "eiffeltower",
+                image: "static/images/eiffeltower.png"
+            },
+            {
+                answer: "bigben",
+                image: "static/images/bigben.png"
+            },
+            {
+                answer: "statueofliberty",
+                image: "static/images/statueofliberty.png"
+            },
+            {
+                answer: "sydneyoperahouse",
+                image: "static/images/sydneyoperahouse.png"
+            }
+        ];
+
+        const currentLandmark =
+            landmarks[Math.floor(Math.random() * landmarks.length)];
+
+        function reverse(s) {
+            return [...s].reverse().join('');
+        }
+        function digitsSum(s) {
+            return (s.match(/\d/g) || []).reduce((a, b) => a + Number(b), 0);
+        }
+        function isPrime(n) {
+            if (n < 2) return false;
+            for (let i = 2; i <= Math.sqrt(n); i++) if (n % i === 0) return false;
+            return true;
+        }
+        function vowelCount(s) { return (s.match(/[aeiou]/gi) || []).length; }
+        function hasLeapYear(s) {
+            const years = s.match(/(?:19|20)\d{2}/g) || [];
+            return years.some(y => {
+                const n = Number(y);
+                return (n % 4 === 0 && n % 100 !== 0) || n % 400 === 0;
+            });
+        }
+
+
+
+        function hasElementSymbol(s) {
+            return elements.some(sym => new RegExp(`(^|[^A-Za-z])${sym}([^a-z]|$)`).test(s));
+        }
+        function moonPhaseEmoji() {
+            const phases = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
+            const knownNewMoon = new Date(Date.UTC(2000, 0, 6, 18, 14));
+            const now = new Date();
+            const days = (now - knownNewMoon) / 86400000;
+            const lunations = days / 29.53058867;
+            return phases[Math.floor((lunations - Math.floor(lunations)) * 8) % 8];
+        }
+        const moon = moonPhaseEmoji();
+
+        const rules = [
+            { field: 'username', text: 'Username must be at least 5 characters long.', test: ({ u }) => u.length >= 5 },
+
+            {
+                field: 'username',
+                text: 'Username must contain "cowlover".',
+                test: ({ u }) => u.toLowerCase().includes('cowlover')
+            },
+            {
+                field: 'username',
+                text: 'Username must contain a number.',
+                test: ({ u }) => /\d/.test(u)
+            },
+            {
+                field: 'username',
+                text: 'Username must contain exactly one underscore.',
+                test: ({ u }) => (u.match(/_/g) || []).length === 1
+            },
+            {
+                field: 'username',
+                text: 'Username must contain a month.',
+                test: ({ u }) => months.some(m => u.toLowerCase().includes(m))
+            },
+            {
+                field: 'username',
+                text: 'Username must contain a colour.',
+                test: ({ u }) => colors.some(c => u.toLowerCase().includes(c))
+            },
+            {
+                field: 'username',
+                text: 'Username must not contain spaces.',
+                test: ({ u }) => !/\s/.test(u)
+            },
+
+            { field: 'username', text: 'Username must start and end with different letters.', test: ({ u }) => /^[a-z]/i.test(u) && /[a-z]$/i.test(u) && u[0].toLowerCase() !== u[u.length - 1].toLowerCase() },
+            { field: 'password', text: 'Password must be at least 8 characters long.', test: ({ p }) => p.length >= 8 },
+            { field: 'password', text: 'Password must contain an uppercase letter.', test: ({ p }) => /[A-Z]/.test(p) },
+            { field: 'password', text: 'Password must contain a lowercase letter.', test: ({ p }) => /[a-z]/.test(p) },
+            { field: 'password', text: 'Password must contain a number.', test: ({ p }) => /\d/.test(p) },
+            { field: 'password', text: 'Password must contain a special character.', test: ({ p }) => /[^A-Za-z0-9\s]/.test(p) },
+            { field: 'password', text: 'The digits in the password must add up to 25.', test: ({ p }) => digitsSum(p) === 25 },
+            { field: 'password', text: 'Password must contain a Roman numeral.', test: ({ p }) => /[IVXLCDM]/.test(p) },
+            { field: 'password', text: 'Password must contain an emoji.', test: ({ p }) => emoji.test(p) },
+            { field: 'password', text: `Password must contain today's moon phase emoji: ${moon}`, test: ({ p }) => p.includes(moon) },
+            { field: 'password', text: 'Password must contain a chess piece symbol.', test: ({ p }) => chess.test(p) },
+            {
+                field: 'password',
+                text: 'Password must contain the landmark name.',
+                test: ({ p }) =>
+                    p.toLowerCase().includes(
+                        currentLandmark.answer.toLowerCase()
+                    )
+            },
+            {
+                field: 'password',
+                text: 'Password must start and end with the same 5 repeated letters.',
+                test: ({ p }) =>
+                    /^(.)\1\1\1\1.*\1\1\1\1\1$/i.test(p)
+            },
+            {
+                field: 'password',
+                text: 'Password must contain the hex code of the displayed colour.',
+                test: ({ p }) =>
+                    p.includes(challengeColour)
+            },
+            {
+                field: 'password',
+                text: 'Password must contain the CAPTCHA text.',
+                test: ({ p }) =>
+                    p.includes(captchaText)
+            },
+            { field: 'password', text: 'Password must contain a country flag emoji.', test: ({ p }) => flags.test(p) },
+            { field: 'password', text: 'Password must contain tomorrow\'s Wordle answer.', test: ({ p }) => wordleAnswer ? p.toLowerCase().includes(wordleAnswer.toLowerCase()) : false },
+            { field: 'password', text: 'Password must contain one cow word: moo, cow, cattle, or beef.', test: ({ p }) => cowWords.some(w => p.toLowerCase().includes(w)) },
+            { field: 'password', text: 'Password length must be a prime number.', test: ({ p }) => isPrime([...p].length) },
+            { field: 'password', text: 'Password must contain your username reversed.', test: ({ u, p }) => u.length > 0 && p.includes(reverse(u)) },
+            { field: 'password', text: 'Password must contain a hex color code, like #FF6B2C.', test: ({ p }) => /#[0-9A-Fa-f]{6}/.test(p) },
+            { field: 'password', text: 'Password must contain a leap year from 1900 to 2099.', test: ({ p }) => hasLeapYear(p) },
+            { field: 'password', text: 'Password must contain a chemical element symbol.', test: ({ p }) => hasElementSymbol(p) }
+        ];
+
+        const LANDMARK_RULE_INDEX = 18;
+        const COLOUR_RULE_INDEX = 20;
+        const CAPTCHA_RULE_INDEX = 21;
+
+
+        const captions = [
+            'make an account. regret starts at rule 1.',
+            'good. now make it worse.',
+            'this form is becoming sentient.',
+            'the cow has begun auditing your choices.',
+            'security through nonsense.',
+            'nearly there. unfortunately.',
+            'now prove you can log in.'
+        ];
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch]));
+        }
+
+        function ruleExtraHtml(i) {
+            if (i === LANDMARK_RULE_INDEX) {
+                return `<div class="rule-extra"><img src="${currentLandmark.image}" alt="guess the landmark"></div>`;
+            }
+            if (i === COLOUR_RULE_INDEX) {
+                return `<div class="rule-extra"><div class="swatch" style="background:${challengeColour}"></div></div>`;
+            }
+            if (i === CAPTCHA_RULE_INDEX) {
+                return `<div class="rule-extra"><img src="${captchaImageData}" alt="captcha" style="width:180px;max-width:100%;border-radius:8px;border:2px solid var(--ink);"></div>`;
+            }
+            return '';
+        }
+
+        function state() {
+            return {
+                username: usernameEl.value,
+                password: passwordEl.value,
+                loginUsername: $('loginUsername').value,
+                loginPassword: $('loginPassword').value,
+                accountCreated: loginScreen.classList.contains('active'),
+                wordleAnswer,
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function save() {
+            const data = JSON.stringify(state());
+            localStorage.setItem(STORAGE_KEY, data);
+            document.cookie = `${COOKIE_KEY}=${encodeURIComponent(data)}; path=/; max-age=1209600; SameSite=Lax`;
+        }
+
+        function readCookie() {
+            const part = document.cookie.split('; ').find(row => row.startsWith(COOKIE_KEY + '='));
+            if (!part) return null;
+            try { return JSON.parse(decodeURIComponent(part.split('=').slice(1).join('='))); }
+            catch { return null; }
+        }
+
+        function load() {
+            let data = null;
+            try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { }
+            if (!data) data = readCookie();
+            if (!data) return;
+            usernameEl.value = data.username || '';
+            passwordEl.value = data.password || '';
+            $('loginUsername').value = data.loginUsername || '';
+            $('loginPassword').value = data.loginPassword || '';
+            if (data.wordleAnswer) wordleAnswer = data.wordleAnswer;
+            if (data.accountCreated) showLogin(false);
+        }
+
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.style.display = 'block';
+            clearTimeout(showToast.t);
+            showToast.t = setTimeout(() => toastEl.style.display = 'none', 2200);
+        }
+
+        function evaluate() {
+            const u = usernameEl.value;
+            const p = passwordEl.value;
+            const results = rules.map(r => !!r.test({ u, p }));
+            const passed = results.filter(Boolean).length;
+
+
+            let firstFail = results.findIndex(x => !x);
+            currentVisible = firstFail === -1 ? rules.length : Math.max(1, firstFail + 1);
+            currentVisible = Math.max(currentVisible, passed + 1);
+            currentVisible = Math.min(currentVisible, rules.length);
+
+            rulesEl.innerHTML = rules.map((r, i) => {
+                const unlocked = i < currentVisible;
+                const ok = results[i];
+                const extra = unlocked ? ruleExtraHtml(i) : '';
+                return `<div class="rule ${unlocked ? (ok ? 'good-rule' : 'bad-rule') : 'locked'}">
+          <div class="num">${i + 1}</div>
+          <div class="rule-text">${unlocked ? escapeHtml(r.text) : '???'}${extra}</div>
+          <div class="status">${unlocked ? (ok ? '✓' : '×') : '·'}</div>
+        </div>`;
+            }).join('');
+
+            scoreEl.textContent = passed;
+            summaryEl.textContent = `${passed} rules complete`;
+            barEl.style.width = `${(passed / rules.length) * 100}%`;
+            createBtn.disabled = passed !== rules.length;
+            captionEl.textContent = captions[Math.min(captions.length - 1, Math.floor(passed / 4))];
+
+
+            captionEl.textContent =
+                captions[Math.min(
+                    captions.length - 1,
+                    Math.floor(passed / 4)
+                )];
+
+            save();
+        }
+
+        async function fetchWordleAnswer() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dateString = tomorrow.toISOString().split('T')[0];
+            try {
+                const res = await fetch(`/wordle/answer`, { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (!data.solution) throw new Error('No solution field');
+                wordleAnswer = String(data.solution).toLowerCase();
+                wordleStatusEl.textContent = `wordle: loaded for ${data.date}`;
+            } catch (err) {
+                wordleProblem = true;
+                const manual = prompt('Could not fetch tomorrow\'s Wordle answer. Type it here to keep the rule accurate, or leave blank to use fallback "crane".');
+                wordleAnswer = (manual && manual.trim()) ? manual.trim().toLowerCase() : 'crane';
+                wordleStatusEl.textContent = manual && manual.trim() ? 'wordle: manual answer set' : 'wordle: fallback used';
+            }
+            evaluate();
+        }
+
+        function showLogin(withMessage = true) {
+            signupScreen.classList.remove('active');
+            loginScreen.classList.add('active');
+            if (withMessage) showToast('account created. now log in.');
+            captionEl.textContent = 'final boss: remembering your own nonsense.';
+            save();
+        }
+
+        function showSignup() {
+            loginScreen.classList.remove('active');
+            signupScreen.classList.add('active');
+            evaluate();
+        }
+
+        function hardReset() {
+            localStorage.removeItem(STORAGE_KEY);
+            document.cookie = `${COOKIE_KEY}=; path=/; max-age=0`;
+            location.reload();
+        }
+        window.hardReset = hardReset;
+
+        usernameEl.addEventListener('input', evaluate);
+        passwordEl.addEventListener('input', evaluate);
+        $('loginUsername').addEventListener('input', save);
+        $('loginPassword').addEventListener('input', save);
+
+        createBtn.addEventListener('click', () => {
+            evaluate();
+            if (!createBtn.disabled) showLogin(true);
+
+        });
+        $('loginBtn').addEventListener('click', () => {
+            const ok = $('loginUsername').value === usernameEl.value && $('loginPassword').value === passwordEl.value;
+            if (ok) {
+                $('winOverlay').classList.add('show');
+                save();
+            } else {
+                showToast('nope. the cow rejects those credentials.');
+            }
+        });
+        $('backBtn').addEventListener('click', showSignup);
+        $('resetBtn').addEventListener('click', hardReset);
+        $('resetBtn2').addEventListener('click', hardReset);
+
+        load();
+        evaluate();
+        fetchWordleAnswer();
+    </script>
+</body>
+
+</html>

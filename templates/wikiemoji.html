@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wicapedia Emoji - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --purple: #6C4CFF;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--purple);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: auto;
+            min-height: 420px;
+            padding: clamp(16px, 4vw, 40px);
+        }
+
+        .url-row {
+            display: flex;
+            gap: 10px;
+            max-width: 640px;
+            margin: 0 auto 14px;
+            flex-wrap: wrap;
+        }
+
+        .url-row input {
+            flex: 1;
+            min-width: 200px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            padding: 12px 16px;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            background: #fff;
+            color: var(--ink);
+        }
+
+        .url-row input:focus {
+            outline: none;
+            border-color: var(--purple);
+        }
+
+        .url-row button {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            border-radius: 12px;
+            background: var(--purple);
+            color: #fff;
+            padding: 0 22px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--ink);
+        }
+
+        .url-row button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--ink);
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 640px;
+            margin: 0 auto 26px;
+        }
+
+        .chip {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            background: #fff;
+            border: 1px solid var(--line);
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            color: var(--ink-soft);
+        }
+
+        .chip:hover {
+            border-color: var(--purple);
+            color: var(--purple);
+        }
+
+        #article {
+            max-width: 640px;
+            margin: 0 auto;
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 18px;
+            box-shadow: 6px 6px 0 var(--ink);
+            padding: 26px 28px;
+            display: none;
+        }
+
+        #article.show {
+            display: block;
+            animation: pop .3s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #article .wtag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--purple);
+        }
+
+        #article h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 26px;
+            margin: 6px 0 14px;
+        }
+
+        #article .emoji-body {
+            font-size: 26px;
+            line-height: 1.9;
+            word-spacing: 4px;
+        }
+
+        #article .toggle-real {
+            margin-top: 18px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            border-top: 1px dashed var(--line);
+            padding-top: 12px;
+            cursor: pointer;
+        }
+
+        #article .real-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--ink-soft);
+            display: none;
+            margin-top: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--ink-soft);
+            font-size: 13px;
+            margin-top: 60px;
+        }
+
+        .status-msg {
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            margin-bottom: 16px;
+            min-height: 18px;
+        }
+
+        .status-msg.error {
+            color: #D6336C;
+        }
+
+        .status-msg.loading {
+            color: var(--purple);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">translated: <span id="score">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Wicapedia Emoji</h1>
+        <div class="caption" id="caption">paste a real wikipedia link. we fetch the real article and ruin it with emoji.
+        </div>
+    </div>
+
+    <div id="arena">
+        <div class="url-row">
+            <input type="text" id="urlInput" placeholder="https://en.wikipedia.org/wiki/Cow" />
+            <button id="goBtn">translate</button>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div class="status-msg" id="statusMsg"></div>
+        <div id="article">
+            <div class="wtag">WIKIPEDIA</div>
+            <h2 id="articleTitle"></h2>
+            <div class="emoji-body" id="emojiBody"></div>
+            <div class="toggle-real" id="toggleReal">show original text (for cowards)</div>
+            <div class="real-body" id="realBody"></div>
+        </div>
+        <div class="empty-state" id="emptyState">no article loaded. try one of the links above ↑</div>
+    </div>
+
+    <script>
+        const captionEl = document.getElementById('caption');
+        const scoreEl = document.getElementById('score');
+        const urlInput = document.getElementById('urlInput');
+        const goBtn = document.getElementById('goBtn');
+        const chips = document.getElementById('chips');
+        const articleEl = document.getElementById('article');
+        const articleTitle = document.getElementById('articleTitle');
+        const emojiBody = document.getElementById('emojiBody');
+        const realBody = document.getElementById('realBody');
+        const toggleReal = document.getElementById('toggleReal');
+        const emptyState = document.getElementById('emptyState');
+        const statusMsg = document.getElementById('statusMsg');
+
+        let score = 0;
+        let coinedWords = [];
+
+        const captions = [
+            "paste a real wikipedia link. we fetch the real article and ruin it with emoji.",
+            "yes, even 'the'. especially 'the'.",
+            "this is objectively a worse way to read.",
+            "somewhere, a wikipedia editor is upset about this.",
+            "you are becoming fluent in nonsense.",
+            "try an obscure article. it'll manage.",
+            "this took someone actual effort to build.",
+            "we do not know why this exists either."
+        ];
+
+        const articles = {
+            "cow": {
+                title: "Cow",
+                text: "The cow is a large domesticated animal known for producing milk and mooing loudly at inconvenient times. Cows live on farms and eat grass all day. Some cows are orange, though this is considered unusual. A cow's diet consists mostly of grass, hay and the occasional sandwich left unattended near a fence."
+            },
+            "pizza": {
+                title: "Pizza",
+                text: "Pizza is a food made from bread, cheese and tomato sauce, baked in an oven until hot. It originated in Italy and later became a staple of internet culture. A pizza can be topped with pepperoni, mushroom or pineapple, the last of which remains controversial. Many people eat pizza while looking at a computer screen."
+            },
+            "moon_landing": {
+                title: "Moon Landing",
+                text: "The moon landing was an event where an astronaut left earth in a rocket and walked on the moon. It happened in the year nineteen sixty nine and was watched by millions of people on television. The astronaut planted a flag and collected rocks before returning home safely."
+            },
+            "internet": {
+                title: "Internet",
+                text: "The internet is a global network of computers that allows people to send messages, watch videos and argue with strangers. It was invented to share information but is now mostly used for looking at pictures of cats and cows. Every day, millions of people use the internet to visit websites that serve no practical purpose."
+            },
+            "dinosaur": {
+                title: "Dinosaur",
+                text: "A dinosaur is a large extinct animal that lived millions of years before the first cow. Dinosaurs went extinct after an asteroid struck the earth, though scientists believe a cow would have survived. Some dinosaurs had wings and could fly, while others simply stood there being enormous."
+            },
+            "sandwich": {
+                title: "Sandwich",
+                text: "A sandwich is two pieces of bread with something placed between them, usually cheese, meat or vegetables. It was named after an earl who did not want to leave his card game to eat. Today the sandwich remains one of the most popular foods among humans and, allegedly, cows."
+            }
+        };
+
+        async function translate(text) {
+            const resp = await fetch(window.location.href + '/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            if (!resp.ok) {
+                throw new Error('translate endpoint failed: ' + resp.status);
+            }
+
+            const data = await resp.json();
+
+            if (data.coined_by_gemini && data.coined_by_gemini.length) {
+                coinedWords = data.coined_by_gemini;
+            } else {
+                coinedWords = [];
+            }
+
+            return data.emoji_text;
+        }
+
+
+        function extractTitle(input) {
+            let s = input.trim();
+            if (!s) return '';
+            try {
+                const withProtocol = /^https?:\/\//i.test(s) ? s : 'https://' + s;
+                const u = new URL(withProtocol);
+                if (/wikipedia\.org$/i.test(u.hostname)) {
+                    const m = u.pathname.match(/\/wiki\/(.+)$/);
+                    if (m) return decodeURIComponent(m[1].replace(/_/g, ' '));
+                }
+            } catch (e) { }
+
+            s = s.replace(/^\/?wiki\//i, '');
+            return decodeURIComponent(s.replace(/_/g, ' '));
+        }
+
+        function generateGeneric(title) {
+            const t = title.replace(/\b\w/g, c => c.toUpperCase());
+            const text = `${t} is a topic of moderate to significant importance. It is often discussed by people who have opinions about it. Historians are not entirely sure when ${t.toLowerCase()} first appeared, but agree that it probably happened at some point. Many cows remain unaware of ${t.toLowerCase()} entirely, and this is considered fine.`;
+            return { title: t, text };
+        }
+
+        async function renderArticle(data) {
+            articleTitle.textContent = data.title;
+            emojiBody.textContent = 'translating…';
+            realBody.textContent = data.text;
+            realBody.style.display = 'none';
+            toggleReal.textContent = "show original text (for cowards)";
+            articleEl.classList.add('show');
+            emptyState.style.display = 'none';
+
+            try {
+                emojiBody.textContent = await translate(data.text);
+            } catch (err) {
+                emojiBody.textContent = 'Could not reach the emoji backend.';
+            }
+
+            score++;
+            scoreEl.textContent = score;
+
+        }
+
+        async function loadArticle(rawInput) {
+            const title = extractTitle(rawInput);
+            if (!title) return;
+
+            statusMsg.textContent = 'fetching real article from wikipedia...';
+            statusMsg.className = 'status-msg loading';
+            goBtn.disabled = true;
+
+            try {
+                const resp = await fetch(
+                    'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title.replace(/ /g, '_')),
+                    { headers: { 'Accept': 'application/json' } }
+                );
+
+                if (resp.status === 404) {
+                    const key = title.toLowerCase().replace(/\s+/g, '_');
+                    const fallback = articles[key];
+                    if (fallback) {
+                        statusMsg.textContent = "wikipedia doesn't have that one - using a backup article instead.";
+                        statusMsg.className = 'status-msg error';
+                        await renderArticle(fallback);
+                    } else {
+                        statusMsg.textContent = "no wikipedia article found for \"" + title + "\". try a real one.";
+                        statusMsg.className = 'status-msg error';
+                    }
+                    return;
+                }
+
+                if (!resp.ok) throw new Error('bad response: ' + resp.status);
+
+                const json = await resp.json();
+                const extract = json.extract && json.extract.trim();
+                if (!extract) throw new Error('no extract in response');
+
+                statusMsg.textContent = '';
+                statusMsg.className = 'status-msg';
+                await renderArticle({ title: json.title || title, text: extract });
+
+            } catch (err) {
+                const key = title.toLowerCase().replace(/\s+/g, '_');
+                const fallback = articles[key] || generateGeneric(title);
+                statusMsg.textContent = "couldn't reach wikipedia (offline or blocked) - using a backup article.";
+                statusMsg.className = 'status-msg error';
+                await renderArticle(fallback);
+            } finally {
+                goBtn.disabled = false;
+            }
+        }
+
+        goBtn.addEventListener('click', () => {
+            if (urlInput.value.trim()) loadArticle(urlInput.value);
+        });
+
+        urlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && urlInput.value.trim()) loadArticle(urlInput.value);
+        });
+
+        toggleReal.addEventListener('click', () => {
+            const showing = realBody.style.display === 'block';
+            realBody.style.display = showing ? 'none' : 'block';
+            toggleReal.textContent = showing ? "show original text (for cowards)" : "hide it, embrace the emoji";
+        });
+
+        const exampleSlugs = ["Cow", "Pizza", "Moon_landing", "Cheese", "Dinosaur", "Sandwich"];
+        exampleSlugs.forEach(slug => {
+            const c = document.createElement('div');
+            c.className = 'chip';
+            c.textContent = 'en.wikipedia.org/wiki/' + slug;
+            c.addEventListener('click', () => {
+                urlInput.value = 'https://en.wikipedia.org/wiki/' + slug;
+                loadArticle(urlInput.value);
+            });
+            chips.appendChild(c);
+        });
+    </script>
+
+</body>
+
+</html>

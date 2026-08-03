@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Let Me Google That - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --green: #2E9E5B;
+            --orange: #FF6B2C;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(26px, 5vw, 40px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+        }
+
+        #arena {
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .builder-card {
+            width: min(480px, 100%);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            padding: 36px 30px;
+            text-align: center;
+            background: #fff;
+        }
+
+        .builder-card label {
+            display: block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        .builder-card input[type="text"] {
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--ink);
+            margin-bottom: 16px;
+        }
+
+        .builder-card input[type="text"]:focus {
+            outline: none;
+            border-color: var(--ink);
+        }
+
+        .builder-card button {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: #fff;
+            background: var(--green);
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .builder-card button:hover {
+            opacity: 0.9;
+        }
+
+        .link-out {
+            margin-top: 20px;
+            display: none;
+            text-align: left;
+        }
+
+        .link-out.show {
+            display: block;
+        }
+
+        .link-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .link-row input {
+            flex: 1;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        .link-row button {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--line);
+            padding: 0 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .try-btn {
+            margin-top: 10px;
+            background: var(--orange) !important;
+        }
+
+        .demo-card {
+            width: min(560px, 100%);
+            text-align: center;
+        }
+
+        .stage-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            margin-bottom: 22px;
+            min-height: 18px;
+        }
+
+        .fake-google {
+            position: relative;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 44px 30px 34px;
+            box-shadow: 0 10px 30px rgba(23, 22, 26, 0.06);
+        }
+
+        .fake-logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 42px;
+            letter-spacing: -1px;
+            margin-bottom: 26px;
+        }
+
+        .fake-logo span:nth-child(1) {
+            color: #4285F4;
+        }
+
+        .fake-logo span:nth-child(2) {
+            color: #EA4335;
+        }
+
+        .fake-logo span:nth-child(3) {
+            color: #FBBC05;
+        }
+
+        .fake-logo span:nth-child(4) {
+            color: #4285F4;
+        }
+
+        .fake-logo span:nth-child(5) {
+            color: #34A853;
+        }
+
+        .fake-logo span:nth-child(6) {
+            color: #EA4335;
+        }
+
+        .fake-search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 12px 18px;
+            max-width: 380px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .fake-search-bar svg {
+            flex-shrink: 0;
+            opacity: 0.5;
+        }
+
+        #typedText {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--ink);
+            text-align: left;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .caret {
+            display: inline-block;
+            width: 1px;
+            height: 16px;
+            background: var(--ink);
+            animation: blink 0.9s step-end infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .fake-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 26px;
+        }
+
+        .fake-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            background: #f2f2f2;
+            color: var(--ink-soft);
+            border: none;
+            padding: 9px 16px;
+            border-radius: 6px;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .fake-btn.active {
+            background: var(--green);
+            color: #fff;
+            transform: scale(0.95);
+        }
+
+        .cursor-dot {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--orange);
+            box-shadow: 0 0 0 4px rgba(255, 107, 44, 0.2);
+            pointer-events: none;
+            transition: top 0.6s ease, left 0.6s ease, opacity 0.3s ease;
+            opacity: 0;
+            top: 0;
+            left: 0;
+        }
+
+        .redirect-note {
+            margin-top: 24px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+        }
+
+        .skip-btn {
+            margin-top: 16px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            background: none;
+            border: 1px solid var(--line);
+            padding: 8px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .skip-btn:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="/">← cow.fun</a>
+    </header>
+
+    <div class="title-block">
+        <h1>Let Me Google That</h1>
+        <div class="caption" id="pageCaption">it is as easy as that</div>
+    </div>
+
+    <div id="arena">
+
+        <div class="builder-card" id="builder">
+            <label for="qInput">what should they have googled?</label>
+            <input type="text" id="qInput" placeholder="e.g. how do I unmute myself on zoom">
+            <button id="makeLinkBtn">make the link</button>
+
+            <div class="link-out" id="linkOut">
+                <label>send them this</label>
+                <div class="link-row">
+                    <input type="text" id="linkResult" readonly>
+                    <button id="copyBtn">copy</button>
+                </div>
+                <button class="try-btn" id="tryBtn">try it yourself</button>
+            </div>
+        </div>
+
+        <div class="demo-card" id="demo" style="display:none;">
+            <div class="stage-label" id="stageLabel">watch closely...</div>
+            <div class="fake-google">
+                <div class="fake-logo">
+                    <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+                </div>
+                <div class="fake-search-bar" id="searchBar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span id="typedText"><span class="caret"></span></span>
+                </div>
+                <div class="fake-buttons">
+                    <button class="fake-btn" id="searchFakeBtn">Google Search</button>
+                    <button class="fake-btn">I'm Feeling Lucky</button>
+                </div>
+                <div class="cursor-dot" id="cursorDot"></div>
+            </div>
+            <div class="redirect-note" id="redirectNote"></div>
+            <button class="skip-btn" id="skipBtn">just take me there</button>
+        </div>
+
+    </div>
+
+    <script>
+        const params = new URLSearchParams(location.search);
+        const q = params.get('q');
+
+        const builder = document.getElementById('builder');
+        const demo = document.getElementById('demo');
+        const pageCaption = document.getElementById('pageCaption');
+
+        if (q && q.trim()) {
+            builder.style.display = 'none';
+            demo.style.display = 'block';
+            pageCaption.textContent = 'sit back and learn';
+            runDemo(q.trim());
+        } else {
+            const qInput = document.getElementById('qInput');
+            const makeLinkBtn = document.getElementById('makeLinkBtn');
+            const linkOut = document.getElementById('linkOut');
+            const linkResult = document.getElementById('linkResult');
+            const copyBtn = document.getElementById('copyBtn');
+            const tryBtn = document.getElementById('tryBtn');
+
+            function buildUrl(value) {
+                const url = new URL(location.href);
+                url.search = '';
+                url.searchParams.set('q', value);
+                return url.toString();
+            }
+
+            function generate() {
+                const value = qInput.value.trim();
+                if (!value) {
+                    qInput.focus();
+                    return;
+                }
+                const url = buildUrl(value);
+                linkResult.value = url;
+                linkOut.classList.add('show');
+            }
+
+            makeLinkBtn.addEventListener('click', generate);
+            qInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') generate();
+            });
+
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(linkResult.value).then(() => {
+                    copyBtn.textContent = 'copied';
+                    setTimeout(() => (copyBtn.textContent = 'copy'), 1200);
+                });
+            });
+
+            tryBtn.addEventListener('click', () => {
+                location.href = linkResult.value;
+            });
+        }
+
+        function runDemo(query) {
+            const stageLabel = document.getElementById('stageLabel');
+            const typedText = document.getElementById('typedText');
+            const searchBar = document.getElementById('searchBar');
+            const searchFakeBtn = document.getElementById('searchFakeBtn');
+            const cursorDot = document.getElementById('cursorDot');
+            const redirectNote = document.getElementById('redirectNote');
+            const skipBtn = document.getElementById('skipBtn');
+
+            const destination = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+            let cancelled = false;
+
+            skipBtn.addEventListener('click', () => {
+                cancelled = true;
+                location.href = destination;
+            });
+
+            async function sleep(ms) {
+                return new Promise((resolve) => setTimeout(resolve, ms));
+            }
+
+            async function typeOut(text) {
+                stageLabel.textContent = 'typing it in...';
+                for (let i = 0; i <= text.length; i++) {
+                    if (cancelled) return;
+                    typedText.innerHTML = escapeHtml(text.slice(0, i)) + '<span class="caret"></span>';
+                    await sleep(45);
+                }
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            async function moveCursorToButton() {
+                stageLabel.textContent = 'moving the mouse over to search...';
+                const barRect = searchBar.getBoundingClientRect();
+                const btnRect = searchFakeBtn.getBoundingClientRect();
+                const parentRect = document.querySelector('.fake-google').getBoundingClientRect();
+
+                cursorDot.style.left = (barRect.right - parentRect.left - 20) + 'px';
+                cursorDot.style.top = (barRect.top - parentRect.top + 10) + 'px';
+                cursorDot.style.opacity = '1';
+                await sleep(150);
+
+                cursorDot.style.left = (btnRect.left - parentRect.left + btnRect.width / 2 - 7) + 'px';
+                cursorDot.style.top = (btnRect.top - parentRect.top + btnRect.height / 2 - 7) + 'px';
+                await sleep(650);
+            }
+
+            async function clickSearch() {
+                stageLabel.textContent = 'clicking "Google Search"...';
+                searchFakeBtn.classList.add('active');
+                await sleep(300);
+                searchFakeBtn.classList.remove('active');
+            }
+
+            async function redirect() {
+                stageLabel.textContent = 'and... that\'s it. that\'s the whole trick.';
+                for (let s = 2; s >= 0; s--) {
+                    if (cancelled) return;
+                    redirectNote.textContent = 'taking you to the real results in ' + s + '...';
+                    await sleep(700);
+                }
+                if (!cancelled) location.href = destination;
+            }
+
+            (async () => {
+                await sleep(500);
+                await typeOut(query);
+                await sleep(300);
+                await moveCursorToButton();
+                await clickSearch();
+                await redirect();
+            })();
+        }
+    </script>
+
+</body>
+
+</html>

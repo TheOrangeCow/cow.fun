@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website DNA - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --pink: #FF4FA0;
+            --purple: #6C4CFF;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--pink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: auto;
+            min-height: 460px;
+            padding: clamp(16px, 4vw, 40px);
+        }
+
+        .url-row {
+            display: flex;
+            gap: 10px;
+            max-width: 640px;
+            margin: 0 auto 24px;
+            flex-wrap: wrap;
+        }
+
+        .url-row input {
+            flex: 1;
+            min-width: 200px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            padding: 12px 16px;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .url-row input:focus {
+            outline: none;
+            border-color: var(--pink);
+        }
+
+        .url-row button {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            border-radius: 12px;
+            background: var(--pink);
+            color: #fff;
+            padding: 0 22px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--ink);
+        }
+
+        .url-row button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--ink);
+        }
+
+        #report {
+            max-width: 640px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        #report.show {
+            display: block;
+            animation: pop .3s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0.92);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .helix-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .report-card {
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 18px;
+            box-shadow: 6px 6px 0 var(--ink);
+            padding: 24px 28px;
+        }
+
+        .report-card .site-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .report-card h2 {
+            font-family: 'Fredoka', sans-serif;
+            margin: 4px 0 18px;
+        }
+
+        .swatches {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 2px solid var(--ink);
+        }
+
+        .trait-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px dashed var(--line);
+            font-size: 14px;
+        }
+
+        .trait-row:last-child {
+            border-bottom: none;
+        }
+
+        .trait-label {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--ink-soft);
+            font-size: 12.5px;
+        }
+
+        .trait-value {
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--ink-soft);
+            font-size: 13px;
+            margin-top: 60px;
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 640px;
+            margin: 0 auto 6px;
+        }
+
+        .chip {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            background: #fff;
+            border: 1px solid var(--line);
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            color: var(--ink-soft);
+        }
+
+        .chip:hover {
+            border-color: var(--pink);
+            color: var(--pink);
+        }
+
+        .backend-row {
+            margin-bottom: 10px;
+        }
+
+        .backend-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px;
+            color: var(--ink-soft);
+            display: flex;
+            align-items: center;
+        }
+
+        #backendInput {
+            flex: 1;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px;
+            padding: 9px 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--ink-soft);
+        }
+
+        #backendInput:focus {
+            outline: none;
+            border-color: var(--pink);
+        }
+
+        .status-msg {
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            margin-bottom: 10px;
+            min-height: 18px;
+        }
+
+        .status-msg.error {
+            color: #D6336C;
+        }
+
+        .status-msg.loading {
+            color: var(--pink);
+        }
+
+        .section-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10.5px;
+            letter-spacing: 0.5px;
+            color: var(--ink-soft);
+            margin: 4px 0 10px;
+            text-transform: uppercase;
+        }
+
+        .section-label.vibe {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--line);
+            color: var(--purple);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">sites sequenced: <span id="score">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Website DNA</h1>
+        <div class="caption" id="caption">paste a url. we fetch the real page and extract its real colors and fonts.
+        </div>
+    </div>
+
+    <div id="arena">
+        <div class="url-row backend-row" style="display: none;">
+            <label for="backendInput" class="backend-label">backend:</label>
+            <input type="text" id="backendInput" value="http://127.0.0.1:5000/websitedna/" />
+        </div>
+        <div class="url-row">
+            <input type="text" id="urlInput" placeholder="https://example.com" />
+            <button id="goBtn">sequence</button>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div class="status-msg" id="statusMsg"></div>
+        <div id="report">
+            <div class="helix-wrap"><svg id="helixSvg" width="120" height="160" viewBox="0 0 120 160"></svg></div>
+            <div class="report-card">
+                <div class="site-name" id="siteName"></div>
+                <h2 id="siteVerdict"></h2>
+                <div class="section-label">EXTRACTED LIVE</div>
+                <div class="swatches" id="swatches"></div>
+                <div class="trait-row"><span class="trait-label">DESCRIPTION</span><span class="trait-value"
+                        id="tDesc"></span></div>
+                <div class="trait-row"><span class="trait-label">FONT STACK</span><span class="trait-value"
+                        id="tFont"></span></div>
+                <div class="trait-row"><span class="trait-label">PAGE WEIGHT</span><span class="trait-value"
+                        id="tWeight"></span></div>
+                <div class="trait-row"><span class="trait-label">SCRIPTS / STYLESHEETS</span><span class="trait-value"
+                        id="tCounts"></span></div>
+                <div class="section-label vibe">VIBE CHECK</div>
+                <div class="trait-row"><span class="trait-label">LAYOUT VIBE</span><span class="trait-value"
+                        id="tLayout"></span></div>
+                <div class="trait-row"><span class="trait-label">ERA GUESS</span><span class="trait-value"
+                        id="tEra"></span></div>
+                <div class="trait-row"><span class="trait-label">SPIRIT ANIMAL</span><span class="trait-value"
+                        id="tAnimal"></span></div>
+                <div class="trait-row"><span class="trait-label">OVERENGINEERING SCORE</span><span class="trait-value"
+                        id="tScore"></span></div>
+            </div>
+        </div>
+        <div class="empty-state" id="emptyState">no site sequenced yet. paste a url above ↑</div>
+    </div>
+
+    <script>
+        const backendInput = document.getElementById('backendInput');
+        const urlInput = document.getElementById('urlInput');
+        const goBtn = document.getElementById('goBtn');
+        const report = document.getElementById('report');
+        const emptyState = document.getElementById('emptyState');
+        const scoreEl = document.getElementById('score');
+        const captionEl = document.getElementById('caption');
+        const chips = document.getElementById('chips');
+        const helixSvg = document.getElementById('helixSvg');
+        const statusMsg = document.getElementById('statusMsg');
+
+        let score = 0;
+
+        const captions = [
+            "paste a url. we fetch the real page and extract its real colors and fonts.",
+            "that palette came straight out of the site's actual css.",
+            "every site has a color scheme. even the ugly ones.",
+            "the vibe check section is a joke. the colors above it are not.",
+            "run this against a heavy js app and watch it struggle honestly.",
+            "genuinely real data, mixed with genuinely fake opinions.",
+        ];
+
+        const layouts = [
+            "aggressive grid of cards", "single scrolling wall of text",
+            "hero section that never ends", "sidebar that shouldn't exist",
+            "suspicious amount of whitespace", "everything centered, for some reason",
+            "carousel nobody asked for", "brutalist and proud of it"
+        ];
+
+        const eras = [
+            "2016 flat-design startup", "2009 web 2.0 gradient era",
+            "2023 SaaS pastel gradient", "1998 geocities energy",
+            "2021 dark-mode-only phase", "corporate-clean, no soul, 2020",
+            "early internet forum, untouched since 2005"
+        ];
+
+        const animals = [
+            "owl (overthinks everything)", "hedgehog (defensive CSS)",
+            "flamingo (all style, little substance)", "turtle (loads slowly, on purpose)",
+            "fox (sneaky dark patterns)", "cow (pointless but lovable)",
+            "otter (chaotic but somehow charming)", "eagle (swoops in with a popup)"
+        ];
+
+        function hashStr(s) {
+            let h = 0;
+            for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+            return h;
+        }
+
+        function seededPick(arr, seed, salt) {
+            return arr[hashStr(seed + salt) % arr.length];
+        }
+
+        function buildHelix(colors) {
+            const w = 120, h = 160;
+            let svg = '';
+            const rungs = 8;
+            const palette = colors.length ? colors : ['#cccccc'];
+            for (let i = 0; i < rungs; i++) {
+                const y = 10 + i * ((h - 20) / (rungs - 1));
+                const phase = (i / rungs) * Math.PI * 2;
+                const x1 = w / 2 + Math.cos(phase) * 34;
+                const x2 = w / 2 - Math.cos(phase) * 34;
+                const c = palette[i % palette.length];
+                svg += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${c}" stroke-width="3" opacity="0.6"/>`;
+                svg += `<circle cx="${x1}" cy="${y}" r="6" fill="${c}"/>`;
+                svg += `<circle cx="${x2}" cy="${y}" r="6" fill="${palette[(i + 1) % palette.length]}"/>`;
+            }
+            return svg;
+        }
+
+        function renderReport(data) {
+            const { domain, title, description, colors, fonts, stats } = data;
+
+            document.getElementById('siteName').textContent = domain;
+            document.getElementById('siteVerdict').textContent = title || domain;
+            document.getElementById('tDesc').textContent = description || "(no meta description found)";
+            document.getElementById('tFont').textContent = fonts.join(', ');
+            document.getElementById('tWeight').textContent = stats.page_kb + ' KB';
+            document.getElementById('tCounts').textContent =
+                stats.script_tags + ' scripts / ' + stats.stylesheets_found + ' stylesheets';
+
+            const swatches = document.getElementById('swatches');
+            swatches.innerHTML = '';
+            colors.forEach(c => {
+                const sw = document.createElement('div');
+                sw.className = 'swatch';
+                sw.style.background = c;
+                sw.title = c;
+                swatches.appendChild(sw);
+            });
+
+            helixSvg.innerHTML = buildHelix(colors);
+
+            const vibeSeed = domain + fonts.join('') + colors.join('');
+            document.getElementById('tLayout').textContent = seededPick(layouts, vibeSeed, 'layout');
+            document.getElementById('tEra').textContent = seededPick(eras, vibeSeed, 'era');
+            document.getElementById('tAnimal').textContent = seededPick(animals, vibeSeed, 'animal');
+
+            const overengineering = Math.min(100, Math.round(
+                stats.script_tags * 2 + stats.stylesheets_found * 3 + stats.page_kb / 5
+            ));
+            document.getElementById('tScore').textContent = overengineering + " / 100";
+
+            report.classList.add('show');
+            emptyState.style.display = 'none';
+
+            score++;
+            scoreEl.textContent = score;
+            captionEl.textContent = captions[Math.min(score, captions.length - 1)];
+        }
+
+        async function sequence(rawUrl) {
+            const backend = backendInput.value.trim().replace(/\/$/, '');
+            if (!backend) {
+                statusMsg.textContent = 'enter a backend url first (see the flask app instructions).';
+                statusMsg.className = 'status-msg error';
+                return;
+            }
+
+            statusMsg.textContent = 'fetching the real page and parsing its real css...';
+            statusMsg.className = 'status-msg loading';
+            goBtn.disabled = true;
+
+            try {
+                const resp = await fetch(backend + '/analyze?url=' + encodeURIComponent(rawUrl));
+                const json = await resp.json();
+
+                if (!resp.ok) {
+                    statusMsg.textContent = json.error || ('backend returned ' + resp.status);
+                    statusMsg.className = 'status-msg error';
+                    return;
+                }
+
+                statusMsg.textContent = '';
+                statusMsg.className = 'status-msg';
+                renderReport(json);
+
+            } catch (err) {
+                statusMsg.textContent =
+                    "couldn't reach the backend at " + backend +
+                    " - is the flask app running? (see app.py instructions)";
+                statusMsg.className = 'status-msg error';
+            } finally {
+                goBtn.disabled = false;
+            }
+        }
+
+        goBtn.addEventListener('click', () => {
+            if (urlInput.value.trim()) sequence(urlInput.value);
+        });
+
+        urlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && urlInput.value.trim()) sequence(urlInput.value);
+        });
+
+        const examples = ["apple.com", "wikipedia.org", "reddit.com", "nasa.gov", "nytimes.com"];
+        examples.forEach(ex => {
+            const c = document.createElement('div');
+            c.className = 'chip';
+            c.textContent = ex;
+            c.addEventListener('click', () => { urlInput.value = ex; sequence(ex); });
+            chips.appendChild(c);
+        });
+    </script>
+
+</body>
+
+</html>

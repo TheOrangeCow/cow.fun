@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Impossible Button - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+            min-height: 420px;
+        }
+
+        .btn {
+            position: absolute;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            border: none;
+            border-radius: 16px;
+            color: #fff;
+            background: var(--orange);
+            box-shadow: 0 6px 0 var(--ink);
+            cursor: pointer;
+            user-select: none;
+            transition: left .18s cubic-bezier(.34, 1.56, .64, 1), top .18s cubic-bezier(.34, 1.56, .64, 1), width .2s ease, height .2s ease, font-size .2s ease, background .15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 10px;
+            line-height: 1.1;
+        }
+
+        .btn:active {
+            box-shadow: 0 2px 0 var(--ink);
+            transform: translateY(4px);
+        }
+
+        .btn.decoy {
+            background: #fff;
+            color: var(--ink);
+            border: 2px solid var(--ink);
+            box-shadow: 0 6px 0 var(--line);
+            opacity: .85;
+        }
+
+        .toast {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--ink);
+            padding: 4px 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatUp 1s ease forwards;
+            z-index: 5;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.9);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 420px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">caught: <span id="score">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>The Impossible Button</h1>
+        <div class="caption" id="caption">it can see your cursor.</div>
+    </div>
+
+    <div id="arena">
+        <button class="btn" id="mainBtn">Click me</button>
+    </div>
+
+    <div id="winOverlay">
+        <h2>ok. the button respects you.</h2>
+        <p>You caught it 20 times. That is either impressive reflexes or a very patient mouse. Either way, the cow is
+            proud.</p>
+        <button onclick="location.reload()">go again</button>
+    </div>
+
+    <script>
+        const arena = document.getElementById('arena');
+        const btn = document.getElementById('mainBtn');
+        const scoreEl = document.getElementById('score');
+        const captionEl = document.getElementById('caption');
+        const winOverlay = document.getElementById('winOverlay');
+
+        let score = 0;
+        let btnSize = 110;
+        let dodgeRadius = 110;
+        let decoys = [];
+        let lastMove = 0;
+
+        const captions = [
+            "it can see your cursor.",
+            "nice. do it again.",
+            "it's getting nervous.",
+            "ok now you're just showing off.",
+            "wait, how are you doing this.",
+            "this is not supposed to happen.",
+            "the button has started sweating.",
+            "it's bringing friends now.",
+            "this is basically unfair at this point.",
+            "the cow is watching closely.",
+            "you are becoming a legend.",
+            "it's out of ideas.",
+            "genuinely impressive. genuinely annoying.",
+            "the button is filing a complaint.",
+            "we are entering uncharted territory.",
+            "honestly? respect.",
+            "it's basically given up.",
+            "one more and something happens.",
+            "here it comes...",
+            "last one. make it count."
+        ];
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+
+        function arenaBounds() {
+            const r = arena.getBoundingClientRect();
+            return { w: r.width, h: r.height };
+        }
+
+        function placeRandom(el, size) {
+            const { w, h } = arenaBounds();
+            const x = rand(10, Math.max(10, w - size - 10));
+            const y = rand(10, Math.max(10, h - size - 10));
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            return { x, y };
+        }
+
+        function placeAwayFrom(el, size, fromX, fromY) {
+            const { w, h } = arenaBounds();
+
+            let best = null;
+            let bestDist = -1;
+
+            for (let i = 0; i < 20; i++) {
+                const x = rand(10, Math.max(10, w - size - 10));
+                const y = rand(10, Math.max(10, h - size * 0.44 - 10));
+
+                const d = Math.hypot(x - fromX, y - fromY);
+
+                if (d > bestDist) {
+                    bestDist = d;
+                    best = { x, y };
+                }
+            }
+
+            if (!best) return;
+
+            el.style.left = best.x + "px";
+            el.style.top = best.y + "px";
+        }
+
+        function setBtnSize(el, size) {
+            el.style.width = size + 'px';
+            el.style.height = (size * 0.44) + 'px';
+            el.style.fontSize = Math.max(12, size * 0.16) + 'px';
+        }
+
+        function showToast(x, y, text) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = text;
+            t.style.left = x + 'px';
+            t.style.top = y + 'px';
+            arena.appendChild(t);
+            setTimeout(() => t.remove(), 1000);
+        }
+
+        function updateCaption() {
+            captionEl.style.opacity = 0;
+            setTimeout(() => {
+                captionEl.textContent = captions[Math.min(score, captions.length - 1)];
+                captionEl.style.opacity = 1;
+            }, 120);
+        }
+
+        function maybeSpawnDecoy() {
+            const targetDecoys = Math.min(5, Math.floor(score / 4));
+            while (decoys.length < targetDecoys) {
+                const d = document.createElement('button');
+                d.className = 'btn decoy';
+                d.textContent = 'Click me';
+                setBtnSize(d, btnSize);
+                placeRandom(d, btnSize);
+                d.addEventListener('mouseenter', () => dodge(d, btnSize));
+                d.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    score = Math.max(0, score - 1);
+                    scoreEl.textContent = score;
+                    showToast(parseFloat(d.style.left), parseFloat(d.style.top), 'decoy!');
+                    const r = d.getBoundingClientRect();
+                    placeAwayFrom(d, btnSize, parseFloat(d.style.left), parseFloat(d.style.top));
+                });
+                arena.appendChild(d);
+                decoys.push(d);
+            }
+        }
+
+        function dodge(el, size) {
+            const now = Date.now();
+            if (now - lastMove < 60) return;
+            lastMove = now;
+
+            const rect = el.getBoundingClientRect();
+            const arenaRect = arena.getBoundingClientRect();
+
+            const x = rect.left - arenaRect.left;
+            const y = rect.top - arenaRect.top;
+
+            placeAwayFrom(el, size, x, y);
+        }
+
+        arena.addEventListener('mousemove', (e) => {
+            const r = arena.getBoundingClientRect();
+            const mx = e.clientX - r.left;
+            const my = e.clientY - r.top;
+            const br = btn.getBoundingClientRect();
+            const bx = br.left - r.left + br.width / 2;
+            const by = br.top - r.top + br.height / 2;
+            const dist = Math.hypot(mx - bx, my - by);
+            if (dist < dodgeRadius) {
+                dodge(btn, btnSize);
+            }
+        });
+
+        btn.addEventListener('click', () => {
+            score++;
+            scoreEl.textContent = score;
+            btnSize = Math.max(34, 110 - score * 3.6);
+            dodgeRadius = Math.min(220, 110 + score * 5);
+            setBtnSize(btn, btnSize);
+            showToast(parseFloat(btn.style.left), parseFloat(btn.style.top), '+1');
+            const x = parseFloat(btn.style.left), y = parseFloat(btn.style.top);
+            placeAwayFrom(btn, btnSize, x, y);
+            updateCaption();
+            maybeSpawnDecoy();
+
+            if (score >= 20) {
+                setTimeout(() => { winOverlay.style.display = 'flex'; }, 400);
+            }
+        });
+
+        setBtnSize(btn, btnSize);
+
+        const { w, h } = arenaBounds();
+        btn.style.left = (w / 2 - btnSize / 2) + "px";
+        btn.style.top = (h / 2 - (btnSize * 0.44) / 2) + "px";
+
+        window.addEventListener('resize', () => {
+            placeRandom(btn, btnSize);
+            decoys.forEach(d => placeRandom(d, btnSize));
+        });
+    </script>
+
+</body>
+
+</html>

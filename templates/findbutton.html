@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find The Button - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --pink: #FF4FA0;
+            --orange: #FF6B2C;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; height: 100%; }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover { color: var(--ink); border-color: var(--ink); }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--pink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block { text-align: center; padding: 6px 20px 10px; }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 420px;
+        }
+
+        .target {
+            position: absolute;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            background: var(--pink);
+            box-shadow: 0 5px 0 var(--ink);
+            cursor: pointer;
+            padding: 12px 20px;
+            transition: left .18s ease, top .18s ease, opacity .3s ease, background .2s ease;
+        }
+
+        .decoy {
+            position: absolute;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            border-radius: 14px;
+            color: var(--ink);
+            background: #fff;
+            border: 2px solid var(--ink);
+            cursor: pointer;
+            padding: 12px 20px;
+            transition: transform .3s ease, opacity .3s ease;
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.92);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 420px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--pink);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">level <span id="levelNum">1</span> / 5</div>
+    </header>
+
+    <div class="title-block">
+        <h1>Find The Button</h1>
+        <div class="caption" id="caption">it's somewhere in there. good luck.</div>
+    </div>
+
+    <div id="arena"></div>
+
+    <div id="winOverlay">
+        <h2>you found it. all of it.</h2>
+        <p>Five buttons. Five kinds of hidden. You have the patience of someone who reads the terms and conditions.</p>
+        <button onclick="location.reload()">hide them again</button>
+    </div>
+
+    <script>
+        const arena = document.getElementById('arena');
+        const levelNumEl = document.getElementById('levelNum');
+        const captionEl = document.getElementById('caption');
+        const winOverlay = document.getElementById('winOverlay');
+
+        let level = 1;
+        let cleanupFns = [];
+
+        const captions = {
+            1: "it's hiding under something.",
+            2: "it's the same color as everything else. good luck.",
+            3: "don't look directly at it. it doesn't like that.",
+            4: "it only exists sometimes.",
+            5: "stay very, very still.",
+        };
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+        function bounds() { const r = arena.getBoundingClientRect(); return { w: r.width, h: r.height }; }
+
+        function clearArena() {
+            cleanupFns.forEach(fn => fn());
+            cleanupFns = [];
+            arena.innerHTML = '';
+        }
+
+        function nextLevel() {
+            level++;
+            levelNumEl.textContent = level;
+            if (level > 5) {
+                winOverlay.style.display = 'flex';
+                return;
+            }
+            captionEl.textContent = captions[level];
+            clearArena();
+            buildLevel(level);
+        }
+
+        function buildLevel(lv) {
+            const { w, h } = bounds();
+            if (lv === 1) {
+                const x = rand(40, Math.max(40, w - 140)), y = rand(40, Math.max(40, h - 80));
+                const real = document.createElement('button');
+                real.className = 'target';
+                real.textContent = 'Found me';
+                real.style.left = x + 'px';
+                real.style.top = y + 'px';
+                real.addEventListener('click', nextLevel);
+                arena.appendChild(real);
+
+                const decoy = document.createElement('button');
+                decoy.className = 'decoy';
+                decoy.textContent = 'Click me';
+                decoy.style.left = x + 'px';
+                decoy.style.top = y + 'px';
+                decoy.addEventListener('click', () => {
+                    decoy.style.transform = 'translateY(-60px) rotate(-8deg)';
+                    decoy.style.opacity = '0';
+                    setTimeout(() => decoy.remove(), 300);
+                });
+                arena.appendChild(decoy);
+            }
+
+            else if (lv === 2) {
+                const x = rand(20, Math.max(20, w - 140)), y = rand(20, Math.max(20, h - 60));
+                const real = document.createElement('button');
+                real.className = 'target';
+                real.textContent = 'Click';
+                real.style.left = x + 'px';
+                real.style.top = y + 'px';
+                real.style.background = 'var(--bg)';
+                real.style.color = 'var(--bg)';
+                real.style.boxShadow = 'none';
+                real.style.border = '1px solid rgba(23,22,26,0.05)';
+                real.addEventListener('mouseenter', () => { real.style.color = 'var(--ink-soft)'; });
+                real.addEventListener('mouseleave', () => { real.style.color = 'var(--bg)'; });
+                real.addEventListener('click', nextLevel);
+                arena.appendChild(real);
+            }
+
+            else if (lv === 3) {
+                const real = document.createElement('button');
+                real.className = 'target';
+                real.textContent = 'Catch me';
+                arena.appendChild(real);
+                function place() {
+                    const { w, h } = bounds();
+                    real.style.left = rand(20, Math.max(20, w - 120)) + 'px';
+                    real.style.top = rand(20, Math.max(20, h - 60)) + 'px';
+                }
+                place();
+                let lastMove = 0;
+                function onMove(e) {
+                    const now = Date.now();
+                    if (now - lastMove < 100) return;
+                    const r = arena.getBoundingClientRect();
+                    const mx = e.clientX - r.left, my = e.clientY - r.top;
+                    const bx = parseFloat(real.style.left) + 50, by = parseFloat(real.style.top) + 20;
+                    if (Math.hypot(mx - bx, my - by) < 90) { lastMove = now; place(); }
+                }
+                arena.addEventListener('mousemove', onMove);
+                real.addEventListener('click', nextLevel);
+                cleanupFns.push(() => arena.removeEventListener('mousemove', onMove));
+            }
+
+            else if (lv === 4) {
+                const real = document.createElement('button');
+                real.className = 'target';
+                real.textContent = 'Quick!';
+                real.style.left = rand(20, Math.max(20, w - 120)) + 'px';
+                real.style.top = rand(20, Math.max(20, h - 60)) + 'px';
+                real.style.opacity = '0';
+                real.style.pointerEvents = 'none';
+                arena.appendChild(real);
+                const iv = setInterval(() => {
+                    real.style.opacity = '1';
+                    real.style.pointerEvents = 'auto';
+                    setTimeout(() => {
+                        real.style.opacity = '0';
+                        real.style.pointerEvents = 'none';
+                    }, 1000);
+                }, 3200);
+                real.addEventListener('click', nextLevel);
+                cleanupFns.push(() => clearInterval(iv));
+            }
+
+            else if (lv === 5) {
+                const real = document.createElement('button');
+                real.className = 'target';
+                real.textContent = 'Stillness';
+                real.style.left = rand(20, Math.max(20, w - 130)) + 'px';
+                real.style.top = rand(20, Math.max(20, h - 60)) + 'px';
+                real.style.opacity = '0';
+                arena.appendChild(real);
+                let stillTimer = null;
+                function onMove() {
+                    real.style.opacity = '0';
+                    clearTimeout(stillTimer);
+                    stillTimer = setTimeout(() => { real.style.opacity = '1'; }, 900);
+                }
+                arena.addEventListener('mousemove', onMove);
+                onMove();
+                real.addEventListener('click', nextLevel);
+                cleanupFns.push(() => { arena.removeEventListener('mousemove', onMove); clearTimeout(stillTimer); });
+            }
+        }
+
+        captionEl.textContent = captions[1];
+        buildLevel(1);
+
+        window.addEventListener('resize', () => {
+            clearArena();
+            buildLevel(level);
+        });
+    </script>
+
+</body>
+
+</html>

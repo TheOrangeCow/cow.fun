@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape The Browser - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --green: #2E9E5B;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--green);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 460px;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+
+        .browser-chrome {
+            background: #e9e8e2;
+            border-bottom: 2px solid var(--ink);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--ink);
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .nav-btn:disabled {
+            opacity: .35;
+            cursor: default;
+        }
+
+        .address-bar {
+            flex: 1;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12.5px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 7px 16px;
+            color: var(--ink-soft);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .page-frame {
+            flex: 1;
+            overflow-y: auto;
+            padding: clamp(20px, 4vw, 48px);
+        }
+
+        .page-frame h2 {
+            font-family: 'Fredoka', sans-serif;
+            margin-top: 0;
+        }
+
+        .page-frame p {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .page-frame a {
+            color: #1a5fb4;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .fake-search-input {
+            width: 100%;
+            max-width: 460px;
+            padding: 10px 16px;
+            border: 1px solid #ccc;
+            border-radius: 999px;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 20px;
+        }
+
+        .result {
+            margin-bottom: 18px;
+        }
+
+        .result .url-line {
+            font-size: 12px;
+            color: #2e7d32;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .result a {
+            font-size: 17px;
+        }
+
+        .wiki-page {
+            font-family: 'Georgia', serif;
+        }
+
+        .wiki-page h2 {
+            font-family: 'Georgia', serif;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 6px;
+        }
+
+        .escape-link {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 10px 20px;
+            background: var(--pink);
+            color: #fff !important;
+            text-decoration: none !important;
+            border-radius: 999px;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.92);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 420px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--green);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">pages visited: <span id="score">1</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Escape The Browser</h1>
+        <div class="caption" id="caption">you are lost on the internet. find your way back to cow.fun.</div>
+    </div>
+
+    <div id="arena">
+        <div class="browser-chrome">
+            <button class="nav-btn" id="backBtn" title="back">←</button>
+            <button class="nav-btn" id="fwdBtn" title="forward">→</button>
+            <div class="address-bar" id="addressBar">https://searchly.com/</div>
+        </div>
+        <div class="page-frame" id="pageFrame"></div>
+    </div>
+
+    <div id="winOverlay">
+        <h2>you escaped.</h2>
+        <p>Through a search engine, a cat facts site, a wiki article and a very suspicious fan page, you found your
+            way home. The internet is proud of you. Mostly confused, but proud.</p>
+        <button onclick="location.reload()">get lost again</button>
+    </div>
+
+    <script>
+        const backBtn = document.getElementById('backBtn');
+        const fwdBtn = document.getElementById('fwdBtn');
+        const addressBar = document.getElementById('addressBar');
+        const pageFrame = document.getElementById('pageFrame');
+        const scoreEl = document.getElementById('score');
+        const captionEl = document.getElementById('caption');
+        const winOverlay = document.getElementById('winOverlay');
+
+        const captions = [
+            "you are lost on the internet. find your way back to cow.fun.",
+            "that was not it. keep looking.",
+            "getting warmer, probably.",
+            "the internet is a strange and endless place.",
+            "you can smell the cow.fun now.",
+            "so close.",
+        ];
+
+        const pages = {
+            "search": {
+                url: "https://searchly.com/?q=cow",
+                render: () => `
+                    <input class="fake-search-input" value="cow" disabled />
+                    <div class="result">
+                        <div class="url-line">catfactsdaily.net</div>
+                        <a data-goto="catfacts">Cat Facts Daily - not related to cows, sorry</a>
+                        <p>You searched for cows, we're giving you cats. That's just how search engines work sometimes.</p>
+                    </div>
+                    <div class="result">
+                        <div class="url-line">wicapedia.org/wiki/Cow</div>
+                        <a data-goto="wikiCow">Cow - Wicapedia, the free emojiclopedia</a>
+                        <p>The cow is a large domesticated animal known for producing milk and mooing loudly.</p>
+                    </div>
+                    <div class="result">
+                        <div class="url-line">totallyrealdeals.biz</div>
+                        <a data-goto="spam">CONGRATULATIONS You Have Won</a>
+                        <p>Click here to claim your prize. This is definitely not a trap.</p>
+                    </div>
+                `
+            },
+            "catfacts": {
+                url: "https://catfactsdaily.net/",
+                render: () => `
+                    <h2>Cat Facts Daily</h2>
+                    <p>Cats sleep for around 70% of their lives. This has nothing to do with cows, which was what you were looking for.</p>
+                    <p>See also: <a data-goto="wikiCat">Cat - Wicapedia</a></p>
+                    <p><a data-goto="search">← back to search results</a></p>
+                `
+            },
+            "wikiCat": {
+                url: "https://wicapedia.org/wiki/Cat",
+                render: () => `
+                    <div class="wiki-page">
+                        <h2>Cat</h2>
+                        <p>The cat is a small carnivorous mammal, unrelated to the cow in almost every meaningful way.</p>
+                        <p>This article has no useful links out. You should probably go back.</p>
+                        <p><a data-goto="catfacts">← back</a></p>
+                    </div>
+                `
+            },
+            "spam": {
+                url: "https://totallyrealdeals.biz/prize",
+                render: () => `
+                    <h2 style="color:#c00;">YOU HAVE WON</h2>
+                    <p>Congratulations, you have won absolutely nothing. This page has no other links.</p>
+                    <p><a data-goto="search">← flee back to search</a></p>
+                `
+            },
+            "wikiCow": {
+                url: "https://wicapedia.org/wiki/Cow",
+                render: () => `
+                    <div class="wiki-page">
+                        <h2>Cow</h2>
+                        <p>The cow is a large domesticated animal known for producing milk and mooing loudly at
+                            inconvenient times. One particularly notable cow is orange and runs a small collection of
+                            pointless internet toys.</p>
+                        <p>See also: <a data-goto="fansite">The Orange Cow - Official Fan Page</a></p>
+                        <p><a data-goto="search">← back to search results</a></p>
+                    </div>
+                `
+            },
+            "fansite": {
+                url: "https://theorangecowfan.club/",
+                render: () => `
+                    <h2>The Orange Cow - Unofficial Fan Page</h2>
+                    <p>Welcome to the internet's #1 fan site for The Orange Cow, creator of cow.fun. This page contains
+                        genuine, real, totally-not-a-trap links about the cow.</p>
+                    <p><a data-goto="spam">Free Prizes From The Orange Cow (click here)</a></p>
+                    <p>Or, if you're feeling brave, visit the cow's actual website:</p>
+                    <a class="escape-link" href="index.html">→ fun.theorangecow.org</a>
+                `
+            }
+        };
+
+        let history = ["search"];
+        let historyIndex = 0;
+        let visited = new Set();
+
+        function renderPage(key) {
+            const page = pages[key];
+            addressBar.textContent = page.url;
+            pageFrame.innerHTML = page.render();
+            pageFrame.querySelectorAll('a[data-goto]').forEach(a => {
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    goTo(a.dataset.goto);
+                });
+            });
+            backBtn.disabled = historyIndex <= 0;
+            fwdBtn.disabled = historyIndex >= history.length - 1;
+
+            if (!visited.has(key)) {
+                visited.add(key);
+                scoreEl.textContent = visited.size;
+                const idx = Math.min(visited.size - 1, captions.length - 1);
+                captionEl.textContent = captions[idx];
+            }
+        }
+
+        function goTo(key) {
+            history = history.slice(0, historyIndex + 1);
+            history.push(key);
+            historyIndex++;
+            renderPage(key);
+        }
+
+        backBtn.addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                renderPage(history[historyIndex]);
+            }
+        });
+
+        fwdBtn.addEventListener('click', () => {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                renderPage(history[historyIndex]);
+            }
+        });
+
+        renderPage("search");
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stack Buttons - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--orange);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 460px;
+            cursor: none;
+        }
+
+        #ground {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 40px;
+            height: 3px;
+            background: var(--ink);
+            opacity: .3;
+        }
+
+        .stackbtn {
+            position: absolute;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: #fff;
+            background: var(--orange);
+            border: none;
+            border-radius: 10px;
+            width: 92px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--ink);
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .stackbtn.resting {
+            background: var(--pink);
+        }
+
+        .warning-flash {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 79, 160, 0.15);
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .warning-flash.show {
+            animation: flash .3s ease;
+        }
+
+        @keyframes flash {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.9);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 420px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">stacked: <span id="score">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Stack Buttons</h1>
+        <div class="caption" id="caption">move your mouse to guide it down. whatever you do, don't click.</div>
+    </div>
+
+    <div id="arena">
+        <div class="warning-flash" id="flash"></div>
+        <div id="ground"></div>
+    </div>
+
+    <div id="winOverlay">
+        <h2>tower complete.</h2>
+        <p>You stacked 12 buttons without clicking a single one. This is a genuinely useless skill, and you should be
+            proud of it.</p>
+        <button onclick="location.reload()">stack again</button>
+    </div>
+
+    <script>
+        const arena = document.getElementById('arena');
+        const scoreEl = document.getElementById('score');
+        const captionEl = document.getElementById('caption');
+        const winOverlay = document.getElementById('winOverlay');
+        const flash = document.getElementById('flash');
+
+        const BTN_W = 92, BTN_H = 34;
+        const START_GRAVITY = 0.08;
+        const END_GRAVITY = 0.75;
+        const GROUND_OFFSET = 40;
+        const WIN_SCORE = 12;
+
+        let stack = [];
+        let score = 0;
+        let mouseX = null;
+        let active = null;
+        let gameWon = false;
+
+        const captions = [
+            "move your mouse to guide it down. whatever you do, don't click.",
+            "nice, one down.",
+            "keep your hand steady.",
+            "getting taller. and more fragile.",
+            "one click and it all goes.",
+            "this is basically a metaphor for something.",
+            "the tower trusts you. don't betray it.",
+            "impressive. suspiciously impressive.",
+            "your mouse hand is shaking. good.",
+            "almost there. do not click.",
+            "one more.",
+            "hold it together.",
+        ];
+
+        function arenaSize() {
+            const r = arena.getBoundingClientRect();
+            return { w: r.width, h: r.height };
+        }
+
+        function getGravity() {
+            const t = score / WIN_SCORE;
+            return START_GRAVITY + (END_GRAVITY - START_GRAVITY) * (t * t * t);
+        }
+
+        function groundY() {
+            return arenaSize().h - GROUND_OFFSET;
+        }
+
+        function spawnNew() {
+            if (gameWon) return;
+            const { w } = arenaSize();
+            const el = document.createElement('button');
+            el.className = 'stackbtn';
+            el.textContent = 'don\'t click';
+            arena.appendChild(el);
+            const startX = Math.random() * (w - BTN_W);
+            active = { el, x: startX, y: -BTN_H, vy: 0 };
+            renderActive();
+        }
+
+        function renderActive() {
+            if (!active) return;
+            active.el.style.left = active.x + 'px';
+            active.el.style.top = active.y + 'px';
+        }
+
+        function currentSurfaceY() {
+            if (stack.length === 0) return groundY();
+            return stack[stack.length - 1].top;
+        }
+
+        function overlapFraction(x1, x2) {
+            const left = Math.max(x1, x2);
+            const right = Math.min(x1 + BTN_W, x2 + BTN_W);
+            const overlap = Math.max(0, right - left);
+            return overlap / BTN_W;
+        }
+
+        function topple(item) {
+            const dir = Math.random() < 0.5 ? -1 : 1;
+            item.el.style.transition = 'transform 0.6s ease, opacity 0.6s ease';
+            item.el.style.transform = `translateY(60px) rotate(${dir * 100}deg)`;
+            item.el.style.opacity = '0';
+            setTimeout(() => item.el.remove(), 620);
+        }
+
+        function toppleAll(items) {
+            items.forEach(it => topple(it));
+        }
+
+        function loseStack(reason) {
+            flash.classList.remove('show');
+            void flash.offsetWidth;
+            flash.classList.add('show');
+            toppleAll(stack);
+            stack = [];
+            score = 0;
+            scoreEl.textContent = score;
+            captionEl.textContent = "it all fell. start again.";
+            if (active) {
+                topple(active);
+                active = null;
+            }
+            setTimeout(spawnNew, 500);
+        }
+
+        function landActive() {
+            const surfaceY = currentSurfaceY();
+            const belowX = stack.length ? stack[stack.length - 1].x : null;
+            const frac = belowX === null ? 1 : overlapFraction(active.x, belowX);
+
+            if (frac >= 0.35) {
+                active.el.style.top = (surfaceY - BTN_H) + 'px';
+                active.el.classList.add('resting');
+                stack.push({ x: active.x, top: surfaceY - BTN_H, el: active.el });
+                score++;
+                scoreEl.textContent = score;
+                captionEl.textContent = captions[Math.min(score, captions.length - 1)];
+                active = null;
+
+                if (score >= WIN_SCORE) {
+                    gameWon = true;
+                    setTimeout(() => { winOverlay.style.display = 'flex'; }, 400);
+                    return;
+                }
+                setTimeout(spawnNew, 260);
+            } else {
+                topple({ el: active.el, x: active.x });
+                active = null;
+                captionEl.textContent = "off-center. it toppled.";
+                setTimeout(spawnNew, 500);
+            }
+        }
+
+        arena.addEventListener('mousemove', (e) => {
+            const r = arena.getBoundingClientRect();
+            mouseX = e.clientX - r.left;
+            if (active) {
+                const { w } = arenaSize();
+                const target = Math.min(w - BTN_W - 4, Math.max(4, mouseX - BTN_W / 2));
+                active.x += (target - active.x) * 0.35;
+                renderActive();
+            }
+        });
+
+        arena.addEventListener('mousedown', (e) => {
+            if (gameWon) return;
+            e.preventDefault();
+            loseStack('clicked');
+        });
+
+        function tick() {
+            if (active && !gameWon) {
+                active.vy += getGravity();
+                active.y += active.vy;
+                const surfaceY = currentSurfaceY();
+                if (active.y + BTN_H >= surfaceY) {
+                    active.y = surfaceY - BTN_H;
+                    renderActive();
+                    landActive();
+                } else {
+                    renderActive();
+                }
+            }
+            requestAnimationFrame(tick);
+        }
+
+        spawnNew();
+        requestAnimationFrame(tick);
+    </script>
+
+</body>
+
+</html>

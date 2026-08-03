@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cow Clicker - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--orange);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 460px;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+        }
+
+        .cow {
+            position: absolute;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            user-select: none;
+            transform-origin: center;
+            transition: transform .12s ease;
+            filter: drop-shadow(0 3px 0 rgba(23, 22, 26, 0.15));
+        }
+
+        .cow:active {
+            transform: scale(0.85);
+        }
+
+        .toast {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--ink);
+            padding: 4px 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatUp 1s ease forwards;
+            z-index: 5;
+            white-space: nowrap;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.92);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 440px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">cows: <span id="score">1</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Cow Clicker</h1>
+        <div class="caption" id="caption">click the cow. it will not stay one cow for long.</div>
+    </div>
+
+    <div id="arena"></div>
+
+    <div id="winOverlay">
+        <h2>COW SINGULARITY</h2>
+        <p>The field is completely full. There are 100 cows in a space meant for roughly four. This is now a
+            population problem, not a game.</p>
+        <button onclick="location.reload()">start a new field</button>
+    </div>
+
+    <script>
+        const arena = document.getElementById('arena');
+        const scoreEl = document.getElementById('score');
+        const captionEl = document.getElementById('caption');
+        const winOverlay = document.getElementById('winOverlay');
+
+        const MAX_COWS = 100;
+        let livingCows = [];
+        let totalEverSpawned = 1;
+        let gameWon = false;
+
+        const captions = [
+            "click the cow. it will not stay one cow for long.",
+            "two cows now. this was foretold.",
+            "the herd grows.",
+            "someone should really tell the farmer.",
+            "this is exponential, and that should concern you.",
+            "the field is getting crowded.",
+            "there are more cows than pixels to put them in, almost.",
+            "you have created a cow economy.",
+            "scientists are studying this field.",
+            "there is no ethical way to stop this now.",
+            "the cows have unionized.",
+            "the field cannot hold much more.",
+        ];
+
+        function milestoneIndex(count) {
+            if (count <= 1) return 0;
+            return Math.min(captions.length - 1, Math.floor(Math.log2(count)));
+        }
+
+        function cowSize(livingCount) {
+            return Math.max(20, 70 - livingCount * 0.5);
+        }
+
+        function arenaBounds() {
+            const r = arena.getBoundingClientRect();
+            return { w: r.width, h: r.height };
+        }
+
+        function clampPos(x, y, size) {
+            const { w, h } = arenaBounds();
+            return {
+                x: Math.min(Math.max(0, x), Math.max(0, w - size)),
+                y: Math.min(Math.max(0, y), Math.max(0, h - size))
+            };
+        }
+
+        function showToast(x, y, text) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = text;
+            t.style.left = x + 'px';
+            t.style.top = y + 'px';
+            arena.appendChild(t);
+            setTimeout(() => t.remove(), 1000);
+        }
+
+        function updateCaption() {
+            const idx = milestoneIndex(livingCows.length);
+            captionEl.style.opacity = 0;
+            setTimeout(() => {
+                captionEl.textContent = captions[idx];
+                captionEl.style.opacity = 1;
+            }, 100);
+        }
+
+        function makeCow(x, y, size) {
+            const el = document.createElement('button');
+            el.className = 'cow';
+            el.textContent = '🐄';
+            el.style.fontSize = size + 'px';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.addEventListener('click', () => handleClick(el));
+            arena.appendChild(el);
+            const record = { el, x, y, size };
+            livingCows.push(record);
+            return record;
+        }
+
+        function removeCow(record) {
+            const idx = livingCows.indexOf(record);
+            if (idx >= 0) livingCows.splice(idx, 1);
+            record.el.remove();
+        }
+
+        function handleClick(el) {
+            if (gameWon) return;
+            const record = livingCows.find(c => c.el === el);
+            if (!record) return;
+
+            const { x, y, size } = record;
+            removeCow(record);
+
+            const nextSize = cowSize(livingCows.length + 2);
+            const slotsLeft = MAX_COWS - livingCows.length;
+            const spawnCount = Math.max(0, Math.min(2, slotsLeft));
+
+            if (spawnCount === 0) {
+                showToast(x, y, "no room!");
+            } else {
+                for (let i = 0; i < spawnCount; i++) {
+                    const jitterX = x + (Math.random() * 70 - 35);
+                    const jitterY = y + (Math.random() * 70 - 35);
+                    const pos = clampPos(jitterX, jitterY, nextSize);
+                    makeCow(pos.x, pos.y, nextSize);
+                    totalEverSpawned++;
+                }
+                showToast(x, y, spawnCount === 2 ? '+2' : '+1');
+            }
+
+            const uniformSize = cowSize(livingCows.length);
+            livingCows.forEach(c => {
+                c.size = uniformSize;
+                c.el.style.fontSize = uniformSize + 'px';
+            });
+
+            scoreEl.textContent = livingCows.length;
+            updateCaption();
+
+            if (livingCows.length >= MAX_COWS) {
+                gameWon = true;
+                setTimeout(() => { winOverlay.style.display = 'flex'; }, 400);
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            livingCows.forEach(c => {
+                const pos = clampPos(c.x, c.y, c.size);
+                c.x = pos.x; c.y = pos.y;
+                c.el.style.left = pos.x + 'px';
+                c.el.style.top = pos.y + 'px';
+            });
+        });
+
+        const startSize = cowSize(1);
+        const { w, h } = arenaBounds();
+        makeCow(w / 2 - startSize / 2, h / 2 - startSize / 2, startSize);
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cowOS Update - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --blue: #2F6FED;
+            --blue-dark: #1E4FC4;
+            --orange: #FF6B2C;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--blue);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .win-box {
+            width: min(520px, 100%);
+            background: #fff;
+            border: 2px solid var(--ink);
+            border-radius: 18px;
+            box-shadow: 8px 8px 0 var(--ink);
+            padding: 30px;
+        }
+
+        .win-title {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: 22px;
+            margin: 0 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--line);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .win-body {
+            font-size: 15px;
+            color: var(--ink-soft);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 12px;
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--blue);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .progress-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            margin-bottom: 18px;
+        }
+
+        .check-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--ink);
+        }
+
+        .check-row input {
+            margin-top: 3px;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .win-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            border: 2px solid var(--ink);
+            padding: 10px 18px;
+            border-radius: 999px;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .win-btn.primary {
+            background: var(--blue);
+            color: #fff;
+            border-color: var(--blue);
+        }
+
+        .win-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .win-btn.primary:hover:not(:disabled) {
+            background: var(--blue-dark);
+        }
+
+        #arena.flicker {
+            animation: flicker 0.15s steps(2) 4;
+        }
+
+        @keyframes flicker {
+
+            0%,
+            100% {
+                background: var(--bg);
+            }
+
+            50% {
+                background: #dfe8ff;
+            }
+        }
+
+        #doneOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.92);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #doneOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #doneOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 440px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #doneOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--blue);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">step <span id="stepNum">1</span> / <span id="stepTotal">9</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>cowOS Update</h1>
+        <div class="caption" id="caption">a small update is available.</div>
+    </div>
+
+    <div id="arena">
+        <div class="win-box" id="winBox"></div>
+    </div>
+
+    <div id="doneOverlay">
+        <h2>you are updated.</h2>
+        <p>All 47 features you didn't ask for are now installed. Your cow has never been more secure.</p>
+        <button onclick="location.reload()">update again</button>
+    </div>
+
+    <script>
+        const box = document.getElementById('winBox');
+        const stepNum = document.getElementById('stepNum');
+        const stepTotal = document.getElementById('stepTotal');
+        const captionEl = document.getElementById('caption');
+        const arena = document.getElementById('arena');
+        const doneOverlay = document.getElementById('doneOverlay');
+
+        let step = 0;
+
+        const captions = [
+            "a small update is available.",
+            "please do not turn off your cow.",
+            "this will only take a moment.",
+            "installing features you did not request.",
+            "your cow is legally obligated to agree.",
+            "almost there. definitely.",
+            "we need one more thing from you.",
+            "do not, under any circumstances, unplug your cow.",
+            "restarting your entire existence.",
+        ];
+
+        stepTotal.textContent = captions.length;
+
+        function setCaption(i) {
+            captionEl.textContent = captions[Math.min(i, captions.length - 1)];
+        }
+
+        function goTo(n) {
+            step = n;
+            stepNum.textContent = Math.min(n + 1, captions.length);
+            setCaption(n);
+            render();
+        }
+
+        function animateProgress(fillEl, labelEl, sequence, onDone) {
+            let i = 0;
+            function tick() {
+                if (i >= sequence.length) { onDone && onDone(); return; }
+                const [pct, label] = sequence[i];
+                fillEl.style.width = pct + '%';
+                labelEl.textContent = label;
+                i++;
+                setTimeout(tick, 500 + Math.random() * 400);
+            }
+            tick();
+        }
+
+        function render() {
+            if (step === 0) {
+                box.innerHTML = `
+                    <div class="win-title"><span class="spinner"></span> Preparing cowOS Update</div>
+                    <div class="win-body">Downloading update package. Please keep this window open. It is legally binding.</div>
+                    <div class="progress-track"><div class="progress-fill" id="pf"></div></div>
+                    <div class="progress-label" id="pl">connecting...</div>
+                `;
+                animateProgress(document.getElementById('pf'), document.getElementById('pl'), [
+                    [12, 'downloading (12%)'], [38, 'downloading (38%)'], [61, 'downloading (61%)'],
+                    [94, 'downloading (94%)'], [100, 'download complete']
+                ], () => setTimeout(() => goTo(1), 500));
+            }
+
+            else if (step === 1) {
+                box.innerHTML = `
+                    <div class="win-title">Restart Required</div>
+                    <div class="win-body">Your cow needs to restart to continue. There is no third option, despite there appearing to be two.</div>
+                    <div class="btn-row">
+                        <button class="win-btn primary" id="a">Restart Now</button>
+                        <button class="win-btn" id="b">Remind Me Later</button>
+                    </div>
+                `;
+                const go = () => goTo(2);
+                document.getElementById('a').onclick = go;
+                document.getElementById('b').onclick = go;
+            }
+
+            else if (step === 2) {
+                box.innerHTML = `
+                    <div class="win-title"><span class="spinner"></span> Installing Update</div>
+                    <div class="win-body">Progress may appear to move backwards. This is intentional and cannot be explained.</div>
+                    <div class="progress-track"><div class="progress-fill" id="pf"></div></div>
+                    <div class="progress-label" id="pl">preparing...</div>
+                `;
+                animateProgress(document.getElementById('pf'), document.getElementById('pl'), [
+                    [7, '7%'], [44, '44%'], [19, '19% (this is normal)'], [88, '88%'],
+                    [3, '3% (please remain calm)'], [100, '100%']
+                ], () => setTimeout(() => goTo(3), 600));
+            }
+
+            else if (step === 3) {
+                box.innerHTML = `
+                    <div class="win-title">One More Thing</div>
+                    <div class="win-body">Before continuing, please review and accept the following, none of which you have time to read.</div>
+                    <div class="check-row"><input type="checkbox" id="c1"><label for="c1">I agree to receive push notifications about push notifications.</label></div>
+                    <div class="check-row"><input type="checkbox" id="c2"><label for="c2">I understand my cow may occasionally moo without warning.</label></div>
+                    <div class="btn-row"><button class="win-btn primary" id="cont" disabled>Continue</button></div>
+                `;
+                const c1 = document.getElementById('c1'), c2 = document.getElementById('c2'), cont = document.getElementById('cont');
+                function check() { cont.disabled = !(c1.checked && c2.checked); }
+                c1.onchange = check; c2.onchange = check;
+                cont.onclick = () => goTo(4);
+            }
+
+            else if (step === 4) {
+                box.innerHTML = `
+                    <div class="win-title">Terms of Cow</div>
+                    <div class="win-body">This step is mandatory and was not mentioned earlier on purpose.</div>
+                    <div class="check-row"><input type="checkbox" id="c1"><label for="c1">I devote my soul to Microsoft.</label></div>
+                    <div class="check-row"><input type="checkbox" id="c2"><label for="c2">I have always liked paperclips, even before I was asked.</label></div>
+                    <div class="check-row"><input type="checkbox" id="c3"><label for="c3">I will not ask what happens if I decline.</label></div>
+                    <div class="btn-row"><button class="win-btn primary" id="cont" disabled>Accept & Continue</button></div>
+                `;
+                const boxes = ['c1', 'c2', 'c3'].map(id => document.getElementById(id));
+                const cont = document.getElementById('cont');
+                function check() { cont.disabled = !boxes.every(b => b.checked); }
+                boxes.forEach(b => b.onchange = check);
+                cont.onclick = () => goTo(5);
+            }
+
+            else if (step === 5) {
+                const features = [
+                    'Clippy (Reborn)', 'Recall Everything Forever', 'Mandatory Cloud Sync', 'Extra Right-Click Menu',
+                    'Ambient Cow Sounds', 'Widget You Cannot Remove', 'Second Widget You Also Cannot Remove'
+                ];
+                box.innerHTML = `
+                    <div class="win-title"><span class="spinner"></span> Installing Feature <span id="fn">1</span> of ${features.length}</div>
+                    <div class="win-body" id="fname">${features[0]}</div>
+                    <div class="progress-track"><div class="progress-fill" id="pf"></div></div>
+                    <div class="progress-label" id="pl">0%</div>
+                `;
+                const fn = document.getElementById('fn'), fname = document.getElementById('fname');
+                const pf = document.getElementById('pf'), pl = document.getElementById('pl');
+                let idx = 0;
+                function installNext() {
+                    if (idx >= features.length) { setTimeout(() => goTo(6), 500); return; }
+                    fn.textContent = idx + 1;
+                    fname.textContent = features[idx];
+                    pf.style.width = '0%';
+                    let pct = 0;
+                    const iv = setInterval(() => {
+                        pct += 20 + Math.random() * 30;
+                        if (pct >= 100) { pct = 100; clearInterval(iv); idx++; setTimeout(installNext, 250); }
+                        pf.style.width = pct + '%';
+                        pl.textContent = Math.round(pct) + '%';
+                    }, 160);
+                }
+                installNext();
+            }
+
+            else if (step === 6) {
+                box.innerHTML = `
+                    <div class="win-title">Almost Done</div>
+                    <div class="win-body">Do not turn off your cow. Seriously. We mean it this time, unlike the other times.</div>
+                    <div class="btn-row"><button class="win-btn primary" id="cont">I Will Not Turn Off My Cow</button></div>
+                `;
+                document.getElementById('cont').onclick = () => goTo(7);
+            }
+
+            else if (step === 7) {
+                box.innerHTML = `
+                    <div class="win-title">One Final Confirmation</div>
+                    <div class="win-body">Are you sure you want to continue? This confirms your confirmation of your earlier consent.</div>
+                    <div class="btn-row">
+                        <button class="win-btn primary" id="yes">Yes, I Confirm My Confirmation</button>
+                    </div>
+                `;
+                document.getElementById('yes').onclick = () => goTo(8);
+            }
+
+            else if (step === 8) {
+                box.innerHTML = `
+                    <div class="win-title"><span class="spinner"></span> Restarting Your Cow</div>
+                    <div class="win-body">This may take several lifetimes.</div>
+                    <div class="progress-track"><div class="progress-fill" id="pf"></div></div>
+                    <div class="progress-label" id="pl">restarting...</div>
+                `;
+                arena.classList.add('flicker');
+                animateProgress(document.getElementById('pf'), document.getElementById('pl'), [
+                    [25, 'restarting...'], [50, 'still restarting...'], [75, 'nearly there...'], [100, 'welcome back']
+                ], () => setTimeout(() => { doneOverlay.style.display = 'flex'; }, 500));
+            }
+        }
+
+        goTo(0);
+    </script>
+
+</body>
+
+</html>

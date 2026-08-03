@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker Sim - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --green: #2E9E5B;
+            --orange: #FF6B2C;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #startScreen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        a.back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+            z-index: 5;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            margin-bottom: 10px;
+        }
+
+        #enterBtn {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(20px, 4vw, 28px);
+            color: #fff;
+            background: var(--ink);
+            border: none;
+            padding: clamp(18px, 4vw, 26px) clamp(36px, 8vw, 60px);
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.15);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        #enterBtn:hover {
+            transform: translateY(-2px);
+        }
+
+        #enterBtn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .hint {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            opacity: 0.7;
+        }
+
+        #terminal {
+            position: fixed;
+            inset: 0;
+            background: #050806;
+            color: #4dff88;
+            font-family: 'IBM Plex Mono', monospace;
+            display: none;
+            flex-direction: column;
+            padding: 20px 26px;
+            overflow: hidden;
+        }
+
+        #terminal::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0.025) 0px,
+                    rgba(255, 255, 255, 0.025) 1px,
+                    transparent 1px,
+                    transparent 3px);
+            mix-blend-mode: overlay;
+        }
+
+        #statusBar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 22px;
+            font-size: 11px;
+            color: #2fae63;
+            border-bottom: 1px solid rgba(77, 255, 136, 0.2);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        #statusBar span b {
+            color: #4dff88;
+        }
+
+        #output {
+            flex: 1;
+            overflow-y: hidden;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: clamp(12px, 1.6vw, 15px);
+            line-height: 1.5;
+            text-shadow: 0 0 4px rgba(77, 255, 136, 0.35);
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: #4dff88;
+            vertical-align: text-bottom;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .flash-line {
+            color: #ff5c5c;
+            text-shadow: 0 0 6px rgba(255, 92, 92, 0.5);
+        }
+
+        .ok-line {
+            color: #4dff88;
+            font-weight: bold;
+        }
+
+        #exitHint {
+            position: fixed;
+            bottom: 14px;
+            right: 18px;
+            font-size: 11px;
+            color: rgba(77, 255, 136, 0.5);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a class="back" href="/">← cow.fun</a>
+
+    <div id="startScreen">
+        <h1>Hacker Sim</h1>
+        <div class="caption">mash your keyboard, look terrifying</div>
+        <button id="enterBtn">ENTER HACK MODE</button>
+        <div class="hint">press esc anytime to bail</div>
+    </div>
+
+    <div id="terminal">
+        <div id="statusBar">
+            <span>NODE: <b id="statNode">--</b></span>
+            <span>UPLINK: <b id="statUplink">--%</b></span>
+            <span>ENCRYPTION: <b id="statEnc">AES-256</b></span>
+            <span>TRACE: <b id="statTrace">--%</b></span>
+        </div>
+        <div id="output"><span class="cursor"></span></div>
+    </div>
+    <div id="exitHint" style="display:none;">esc to exit</div>
+
+    <script>
+        const startScreen = document.getElementById('startScreen');
+        const terminal = document.getElementById('terminal');
+        const enterBtn = document.getElementById('enterBtn');
+        const output = document.getElementById('output');
+        const exitHint = document.getElementById('exitHint');
+        const statNode = document.getElementById('statNode');
+        const statUplink = document.getElementById('statUplink');
+        const statTrace = document.getElementById('statTrace');
+
+        const varNames = ['payload', 'buf', 'sock', 'key', 'ctx', 'shell', 'token', 'nonce', 'stream', 'cache', 'frame', 'hash', 'proc', 'node'];
+        const funcNames = ['decrypt', 'inject', 'bypass', 'spoof', 'tunnel', 'exploit', 'patch', 'resolve', 'handshake', 'obfuscate', 'escalate', 'sanitize', 'route', 'compile'];
+        const words = ['kernel', 'root', 'firewall', 'socket', 'daemon', 'packet', 'session', 'thread', 'cluster', 'index', 'buffer', 'registry', 'gateway', 'protocol', 'shard'];
+
+        function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
+        function hex(len) {
+            let s = '';
+            for (let i = 0; i < len; i++) s += '0123456789abcdef'[randInt(0, 15)];
+            return s;
+        }
+        function fakeIp() { return `${randInt(10, 255)}.${randInt(0, 255)}.${randInt(0, 255)}.${randInt(0, 255)}`; }
+
+        function genLine() {
+            const type = randInt(0, 9);
+            switch (type) {
+                case 0:
+                    return `function ${pick(funcNames)}_${pick(words)}(${pick(varNames)}, ${pick(varNames)}) {`;
+                case 1:
+                    return `    if (${pick(varNames)}.${pick(words)} !== 0x${hex(4)}) throw new Error('mismatch');`;
+                case 2:
+                    return `    const ${pick(varNames)} = ${pick(funcNames)}(0x${hex(8)});`;
+                case 3:
+                    return `// TODO: harden ${pick(words)} layer before deploy`;
+                case 4:
+                    return `[${new Date().toISOString().slice(11, 19)}] connecting to ${fakeIp()}:${randInt(1024, 65535)}...`;
+                case 5:
+                    return `>> ${pick(funcNames)}-${pick(words)} --target ${fakeIp()} --port ${randInt(20, 9999)} --force`;
+                case 6:
+                    return `${hex(2)} ${hex(2)} ${hex(2)} ${hex(2)}  ${hex(2)} ${hex(2)} ${hex(2)} ${hex(2)}  ${hex(2)} ${hex(2)} ${hex(2)} ${hex(2)}`;
+                case 7:
+                    return `    return ${pick(varNames)}.map(${pick(varNames)} => ${pick(funcNames)}(${pick(varNames)}));`;
+                case 8:
+                    return `class ${pick(words).charAt(0).toUpperCase() + pick(words).slice(1)}Handler extends Base${pick(words).charAt(0).toUpperCase() + pick(words).slice(1)} {`;
+                default:
+                    return `}`;
+            }
+        }
+
+        const FLASH_LINES = [
+            'WARNING: intrusion countermeasures detected',
+            'firewall integrity: compromised',
+            'rerouting through proxy chain...',
+            'trace attempt blocked'
+        ];
+        const OK_LINES = [
+            'ACCESS GRANTED',
+            'root shell acquired',
+            'encryption bypassed',
+            'handshake complete'
+        ];
+
+        let queue = [];
+        let keystrokes = 0;
+
+        function refillQueue() {
+            let line = genLine();
+
+            const roll = Math.random();
+            if (roll < 0.05) {
+                queue.push({ text: pick(FLASH_LINES) + '\n', cls: 'flash-line' });
+                return;
+            }
+            if (roll < 0.09) {
+                queue.push({ text: pick(OK_LINES) + '\n', cls: 'ok-line' });
+                return;
+            }
+
+            for (const ch of line + '\n') {
+                queue.push({ text: ch, cls: null });
+            }
+        }
+
+        function typeChars(n) {
+            let html = '';
+            for (let i = 0; i < n; i++) {
+                if (queue.length === 0) refillQueue();
+                const next = queue.shift();
+                if (!next) break;
+                if (next.cls) {
+                    html += `<span class="${next.cls}">${escapeHtml(next.text)}</span>`;
+                } else {
+                    html += escapeHtml(next.text);
+                }
+            }
+            return html;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        let bodyText = '';
+        function appendOutput(n) {
+            bodyText += typeChars(n);
+            output.innerHTML = bodyText + '<span class="cursor"></span>';
+
+            const lines = bodyText.split('\n');
+            if (lines.length > 400) {
+                bodyText = lines.slice(lines.length - 300).join('\n');
+            }
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function updateStats() {
+            statNode.textContent = hex(4).toUpperCase();
+            statUplink.textContent = randInt(40, 99) + '%';
+            statTrace.textContent = randInt(0, 30) + '%';
+        }
+
+        function enterHackMode() {
+            startScreen.style.display = 'none';
+            terminal.style.display = 'flex';
+            exitHint.style.display = 'block';
+
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => { });
+            }
+
+            updateStats();
+            setInterval(updateStats, 1400);
+
+            setInterval(() => {
+                if (Math.random() < 0.4) appendOutput(randInt(1, 3));
+            }, 250);
+        }
+
+        function exitHackMode() {
+            terminal.style.display = 'none';
+            startScreen.style.display = 'flex';
+            exitHint.style.display = 'none';
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => { });
+            }
+        }
+
+        enterBtn.addEventListener('click', enterHackMode);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                exitHackMode();
+                return;
+            }
+            if (terminal.style.display !== 'flex') return;
+
+            if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+
+            keystrokes++;
+            appendOutput(randInt(3, 9));
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && terminal.style.display === 'flex') {
+                exitHackMode();
+            }
+        });
+    </script>
+
+</body>
+
+</html>
