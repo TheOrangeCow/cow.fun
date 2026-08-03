@@ -4,3 +4,4 @@ python-socketio==5.11.3
 gevent 
 gevent-websocket
 dotenv
+requests
