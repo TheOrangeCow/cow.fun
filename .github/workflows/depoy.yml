@@ -20,4 +20,4 @@ jobs:
             cd /var/www/fun
             git config --global --add safe.directory /var/www/fun
             git pull origin main
-            bash /var/www/libary/update_app.sh
+            bash /var/www/fun/update_app.sh
