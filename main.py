@@ -136,6 +136,10 @@ def logic():
 def mooer():
     return render_template("mooer.html")
 
+@app.route("/blockparty")
+def blockparty():
+    return render_template("blockparty.html")
+
 # Home and error pages
 
 @app.route("/index.html")
@@ -152,8 +156,6 @@ def pages(page):
 
 
 if __name__ == "__main__":
-
-    init_terra()
 
     port = int(os.environ.get("PORT", 5000))
 

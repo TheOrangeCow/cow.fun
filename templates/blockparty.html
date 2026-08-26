@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Party - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --yellow: #FFC83D;
+            --blue: #5B8CFF;
+            --green: #5BCB77;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) 20px;
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: min(88vw, 520px);
+            aspect-ratio: 1;
+            gap: 5px;
+            padding: 8px;
+            border-radius: 18px;
+            background: rgba(23, 22, 26, 0.06);
+            box-shadow: inset 0 0 0 1px rgba(23, 22, 26, 0.04);
+            touch-action: none;
+        }
+
+        .cell {
+            position: relative;
+            background: rgba(255, 255, 255, 0.82);
+            border-radius: 6px;
+            border: 1px solid rgba(23, 22, 26, 0.055);
+            transition:
+                background .12s ease,
+                transform .12s ease,
+                opacity .15s ease;
+        }
+
+        .cell.filled {
+            border-color: transparent;
+            box-shadow:
+                inset 0 -4px 0 rgba(23, 22, 26, 0.13),
+                0 2px 0 rgba(23, 22, 26, 0.05);
+            transform: scale(.98);
+        }
+
+        .cell.preview {
+            opacity: .55;
+            transform: scale(.92);
+        }
+
+        .cell.invalid {
+            background: rgba(255, 79, 160, 0.18);
+        }
+
+        .cell.clearing {
+            animation: clearCell .28s ease forwards;
+        }
+
+        @keyframes clearCell {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            55% {
+                transform: scale(1.25) rotate(8deg);
+                opacity: .8;
+            }
+
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        #pieces {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            gap: clamp(15px, 5vw, 55px);
+            width: min(88vw, 520px);
+            min-height: 125px;
+            margin-top: 20px;
+        }
+
+        .piece-slot {
+            width: 30%;
+            min-height: 105px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .piece {
+            display: grid;
+            gap: 4px;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            transition: transform .15s ease;
+            padding: 8px;
+        }
+
+        .piece:hover {
+            transform: translateY(-5px) scale(1.04);
+        }
+
+        .piece.dragging {
+            position: fixed;
+            z-index: 100;
+            pointer-events: none;
+            transform: scale(1.08);
+            filter: drop-shadow(0 10px 8px rgba(23, 22, 26, .15));
+        }
+
+        .piece-cell {
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            box-shadow: inset 0 -4px 0 rgba(23, 22, 26, .13);
+        }
+
+        .piece-cell.empty {
+            visibility: hidden;
+            box-shadow: none;
+        }
+
+        .hint {
+            margin-top: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--ink-soft);
+            opacity: .75;
+        }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            top: 48%;
+            transform: translate(-50%, -50%) scale(.8);
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(24px, 6vw, 42px);
+            font-weight: 600;
+            color: var(--ink);
+            background: #fff;
+            border: 2px solid var(--ink);
+            padding: 10px 22px;
+            border-radius: 18px;
+            box-shadow: 0 7px 0 var(--ink);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        #toast.show {
+            animation: toastPop .65s ease;
+        }
+
+        @keyframes toastPop {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(.7) rotate(-4deg);
+            }
+
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.08) rotate(2deg);
+            }
+
+            70% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotate(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -65%) scale(.95);
+            }
+        }
+
+        #gameOver {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, .9);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #gameOver.show {
+            display: flex;
+        }
+
+        #gameOver h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(34px, 7vw, 56px);
+            margin: 0 0 12px;
+        }
+
+        #gameOver p {
+            font-family: 'IBM Plex Mono', monospace;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #gameOver button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        @media (max-width: 520px) {
+            #arena {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            #board {
+                gap: 3px;
+                padding: 6px;
+            }
+
+            .piece-cell {
+                width: 20px;
+                height: 20px;
+            }
+
+            #pieces {
+                min-height: 105px;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+
+        <div class="score-tag">
+            score: <span id="score">0</span>
+        </div>
+    </header>
+
+    <div class="title-block">
+        <h1>Block Party</h1>
+        <div class="caption" id="caption">
+            fill a row. make it disappear.
+        </div>
+    </div>
+
+    <div id="arena">
+
+        <div id="board"></div>
+
+        <div id="pieces">
+            <div class="piece-slot" id="slot0"></div>
+            <div class="piece-slot" id="slot1"></div>
+            <div class="piece-slot" id="slot2"></div>
+        </div>
+
+        <div class="hint">
+            drag blocks onto the board
+        </div>
+
+    </div>
+
+    <div id="toast"></div>
+
+    <div id="gameOver">
+        <h2>no more moves.</h2>
+        <p>
+            Final score: <strong id="finalScore">0</strong><br>
+            the cow tried its best.
+        </p>
+
+        <button onclick="location.reload()">
+            play again
+        </button>
+    </div>
+
+    <script>
+        const boardEl = document.getElementById('board');
+        const scoreEl = document.getElementById('score');
+        const captionEl = document.getElementById('caption');
+        const toastEl = document.getElementById('toast');
+        const gameOverEl = document.getElementById('gameOver');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        const SIZE = 8;
+
+        let board = [];
+        let score = 0;
+        let pieces = [];
+        let draggedPiece = null;
+        let dragEl = null;
+        let clearCount = 0;
+
+        const colors = [
+            '#FF6B2C',
+            '#FF4FA0',
+            '#FFC83D',
+            '#5B8CFF',
+            '#5BCB77'
+        ];
+
+        const captions = [
+            'fill a row. make it disappear.',
+            'nice.',
+            'keep going.',
+            'that was clean.',
+            'the cow approves.',
+            'very blocky.',
+            'you are getting good at this.',
+            'combo time.',
+            'ok, now you are showing off.',
+            'the cow is impressed.',
+            'this is getting serious.',
+            'block legend.',
+            'absolute geometry.',
+            'how many can you clear?',
+            'do not waste the good pieces.',
+            'the cow is watching closely.'
+        ];
+
+        const SHAPES = [
+            [[0, 0]],
+
+            [[0, 0], [0, 1]],
+
+            [[0, 0], [0, 1], [0, 2]],
+
+            [[0, 0], [1, 0], [1, 1]],
+
+            [[0, 0], [0, 1], [1, 0]],
+
+            [[0, 0], [1, 0], [2, 0]],
+
+            [[0, 0], [0, 1], [0, 2], [0, 3]],
+
+            [[0, 0], [1, 0], [2, 0], [3, 0]],
+
+            [[0, 0], [0, 1], [1, 0], [1, 1]],
+
+            [[0, 0], [0, 1], [0, 2], [1, 1]],
+
+            [[0, 1], [1, 0], [1, 1], [1, 2]],
+
+            [[0, 0], [1, 0], [2, 0], [2, 1]],
+
+            [[0, 1], [1, 1], [2, 0], [2, 1]],
+
+            [[0, 0], [0, 1], [1, 1], [2, 1]],
+
+            [[0, 0], [1, 0], [1, 1], [2, 1]],
+
+            [[0, 0], [0, 1], [1, 1], [1, 2]],
+
+            [[0, 0], [0, 1], [1, 1], [2, 1], [2, 2]],
+
+            [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]]
+        ];
+
+        function initBoard() {
+            board = Array.from(
+                { length: SIZE },
+                () => Array(SIZE).fill(null)
+            );
+
+            boardEl.innerHTML = '';
+
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    const cell = document.createElement('div');
+
+                    cell.className = 'cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function randomPiece() {
+            const shape =
+                SHAPES[Math.floor(Math.random() * SHAPES.length)];
+
+            return {
+                shape: shape.map(p => [...p]),
+                color: colors[Math.floor(Math.random() * colors.length)]
+            };
+        }
+
+        function createPieces() {
+            pieces = [
+                randomPiece(),
+                randomPiece(),
+                randomPiece()
+            ];
+
+            renderPieces();
+
+            setTimeout(checkGameOver, 50);
+        }
+
+        function renderPieces() {
+            for (let i = 0; i < 3; i++) {
+                const slot = document.getElementById('slot' + i);
+
+                slot.innerHTML = '';
+
+                if (!pieces[i]) continue;
+
+                const piece = document.createElement('div');
+
+                piece.className = 'piece';
+
+                const maxRow = Math.max(
+                    ...pieces[i].shape.map(p => p[0])
+                );
+
+                const maxCol = Math.max(
+                    ...pieces[i].shape.map(p => p[1])
+                );
+
+                piece.style.gridTemplateRows =
+                    `repeat(${maxRow + 1}, 25px)`;
+
+                piece.style.gridTemplateColumns =
+                    `repeat(${maxCol + 1}, 25px)`;
+
+                for (let r = 0; r <= maxRow; r++) {
+                    for (let c = 0; c <= maxCol; c++) {
+
+                        const cell = document.createElement('div');
+
+                        const filled = pieces[i].shape.some(
+                            p => p[0] === r && p[1] === c
+                        );
+
+                        cell.className =
+                            'piece-cell' +
+                            (filled ? '' : ' empty');
+
+                        if (filled) {
+                            cell.style.background = pieces[i].color;
+                        }
+
+                        piece.appendChild(cell);
+                    }
+                }
+
+                piece.addEventListener('pointerdown', e => {
+                    startDrag(e, i, piece);
+                });
+
+                slot.appendChild(piece);
+            }
+        }
+
+        function startDrag(e, index, element) {
+            if (!pieces[index]) return;
+
+            draggedPiece = {
+                index,
+                piece: pieces[index]
+            };
+
+            dragEl = element;
+
+            dragEl.classList.add('dragging');
+
+            moveDrag(e);
+
+            document.addEventListener('pointermove', moveDrag);
+            document.addEventListener('pointerup', endDrag, {
+                once: true
+            });
+        }
+
+        function moveDrag(e) {
+            if (!dragEl || !draggedPiece) return;
+
+            const shape = draggedPiece.piece.shape;
+
+            const width =
+                (Math.max(...shape.map(p => p[1])) + 1) * 25;
+
+            dragEl.style.left =
+                (e.clientX - width / 2) + 'px';
+
+            dragEl.style.top =
+                (e.clientY - 65) + 'px';
+
+            const target = getBoardPosition(e.clientX, e.clientY);
+
+            clearPreview();
+
+            if (target) {
+                showPreview(
+                    draggedPiece.piece,
+                    target.row,
+                    target.col
+                );
+            }
+        }
+
+        function endDrag(e) {
+            document.removeEventListener('pointermove', moveDrag);
+
+            clearPreview();
+
+            if (!draggedPiece) return;
+
+            const target =
+                getBoardPosition(e.clientX, e.clientY);
+
+            if (
+                target &&
+                canPlace(
+                    draggedPiece.piece,
+                    target.row,
+                    target.col
+                )
+            ) {
+                placePiece(
+                    draggedPiece.index,
+                    target.row,
+                    target.col
+                );
+            }
+
+            if (dragEl) {
+                dragEl.classList.remove('dragging');
+                dragEl.style.left = '';
+                dragEl.style.top = '';
+            }
+
+            draggedPiece = null;
+            dragEl = null;
+        }
+
+        function getBoardPosition(x, y) {
+            const rect = boardEl.getBoundingClientRect();
+
+            const cellSize =
+                rect.width / SIZE;
+
+            const col =
+                Math.floor((x - rect.left) / cellSize);
+
+            const row =
+                Math.floor((y - rect.top) / cellSize);
+
+            if (
+                row < 0 ||
+                row >= SIZE ||
+                col < 0 ||
+                col >= SIZE
+            ) {
+                return null;
+            }
+
+            return { row, col };
+        }
+
+        function canPlace(piece, row, col) {
+            return piece.shape.every(([dr, dc]) => {
+                const r = row + dr;
+                const c = col + dc;
+
+                return (
+                    r >= 0 &&
+                    r < SIZE &&
+                    c >= 0 &&
+                    c < SIZE &&
+                    !board[r][c]
+                );
+            });
+        }
+
+        function canPlaceAnywhere(piece) {
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    if (canPlace(piece, r, c)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        function showPreview(piece, row, col) {
+            const valid =
+                canPlace(piece, row, col);
+
+            piece.shape.forEach(([dr, dc]) => {
+                const r = row + dr;
+                const c = col + dc;
+
+                if (
+                    r >= 0 &&
+                    r < SIZE &&
+                    c >= 0 &&
+                    c < SIZE
+                ) {
+                    const cell =
+                        getCell(r, c);
+
+                    cell.classList.add(
+                        valid ? 'preview' : 'invalid'
+                    );
+
+                    if (valid) {
+                        cell.style.background =
+                            piece.color;
+                    }
+                }
+            });
+        }
+
+        function clearPreview() {
+            document.querySelectorAll(
+                '.cell.preview, .cell.invalid'
+            ).forEach(cell => {
+                cell.classList.remove(
+                    'preview',
+                    'invalid'
+                );
+
+                if (!cell.classList.contains('filled')) {
+                    cell.style.background = '';
+                }
+            });
+        }
+
+        function getCell(row, col) {
+            return boardEl.children[
+                row * SIZE + col
+            ];
+        }
+
+        function placePiece(index, row, col) {
+            const piece = pieces[index];
+
+            piece.shape.forEach(([dr, dc]) => {
+                const r = row + dr;
+                const c = col + dc;
+
+                board[r][c] = piece.color;
+            });
+
+            pieces[index] = null;
+
+            score += piece.shape.length;
+            scoreEl.textContent = score;
+
+            renderBoard();
+
+            renderPieces();
+
+            updateCaption();
+
+            setTimeout(clearLines, 120);
+
+            if (pieces.every(p => p === null)) {
+                setTimeout(createPieces, 350);
+            } else {
+                setTimeout(checkGameOver, 500);
+            }
+        }
+
+        function renderBoard() {
+            for (let r = 0; r < SIZE; r++) {
+                for (let c = 0; c < SIZE; c++) {
+                    const cell = getCell(r, c);
+                    const value = board[r][c];
+
+                    if (value) {
+                        cell.classList.add('filled');
+                        cell.style.background = value;
+                    } else {
+                        cell.classList.remove('filled');
+                        cell.style.background = '';
+                    }
+                }
+            }
+        }
+
+        function findFullLines() {
+            const rows = [];
+            const cols = [];
+
+            for (let r = 0; r < SIZE; r++) {
+                if (board[r].every(v => v !== null)) {
+                    rows.push(r);
+                }
+            }
+
+            for (let c = 0; c < SIZE; c++) {
+                let full = true;
+
+                for (let r = 0; r < SIZE; r++) {
+                    if (!board[r][c]) {
+                        full = false;
+                        break;
+                    }
+                }
+
+                if (full) {
+                    cols.push(c);
+                }
+            }
+
+            return { rows, cols };
+        }
+
+        function clearLines() {
+            const { rows, cols } = findFullLines();
+
+            if (rows.length === 0 && cols.length === 0) {
+                return;
+            }
+
+            const cellsToClear = new Set();
+
+            rows.forEach(r => {
+                for (let c = 0; c < SIZE; c++) {
+                    cellsToClear.add(r * SIZE + c);
+                }
+            });
+
+            cols.forEach(c => {
+                for (let r = 0; r < SIZE; r++) {
+                    cellsToClear.add(r * SIZE + c);
+                }
+            });
+
+            cellsToClear.forEach(idx => {
+                boardEl.children[idx].classList.add('clearing');
+            });
+
+            const linesCleared = rows.length + cols.length;
+            const bonus = linesCleared * SIZE * (linesCleared > 1 ? 2 : 1);
+
+            score += bonus;
+            scoreEl.textContent = score;
+
+            clearCount++;
+
+            showToast(linesCleared);
+
+            setTimeout(() => {
+                rows.forEach(r => {
+                    for (let c = 0; c < SIZE; c++) {
+                        board[r][c] = null;
+                    }
+                });
+
+                cols.forEach(c => {
+                    for (let r = 0; r < SIZE; r++) {
+                        board[r][c] = null;
+                    }
+                });
+
+                cellsToClear.forEach(idx => {
+                    boardEl.children[idx].classList.remove('clearing');
+                });
+
+                renderBoard();
+
+                updateCaption();
+
+                setTimeout(checkGameOver, 100);
+            }, 280);
+        }
+
+        function showToast(linesCleared) {
+            let text = 'clear!';
+
+            if (linesCleared >= 3) {
+                text = 'combo!';
+            } else if (linesCleared === 2) {
+                text = 'double!';
+            }
+
+            toastEl.textContent = text;
+            toastEl.classList.remove('show');
+
+            void toastEl.offsetWidth;
+
+            toastEl.classList.add('show');
+        }
+
+        function updateCaption() {
+            const index =
+                Math.min(clearCount, captions.length - 1);
+
+            captionEl.textContent = captions[index];
+        }
+
+        function checkGameOver() {
+            const active = pieces.filter(p => p !== null);
+
+            if (active.length === 0) {
+                return;
+            }
+
+            const canMove = active.some(p => canPlaceAnywhere(p));
+
+            if (!canMove) {
+                finalScoreEl.textContent = score;
+                gameOverEl.classList.add('show');
+            }
+        }
+
+        function init() {
+            initBoard();
+            createPieces();
+            renderBoard();
+        }
+
+        init();
+    </script>
+
+</body>
+
+</html>
