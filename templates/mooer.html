@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moo Match - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --green: #63C174;
+            --yellow: #FFD84D;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "Inter", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+            transition: .15s ease;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: "Fredoka", sans-serif;
+            font-weight: 600;
+            font-size: clamp(30px, 5vw, 48px);
+            margin: 0 0 6px;
+            letter-spacing: -.5px;
+        }
+
+        .caption {
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            min-height: 560px;
+            background:
+                radial-gradient(circle at 20% 20%,
+                    rgba(255, 107, 44, .05),
+                    transparent 40%),
+                radial-gradient(circle at 80% 80%,
+                    rgba(255, 79, 160, .06),
+                    transparent 40%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cow-container {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cow {
+            font-size: clamp(100px, 18vw, 170px);
+            line-height: 1;
+            user-select: none;
+            transition: transform .12s ease;
+        }
+
+        .cow.mooing {
+            animation: cowMoo .22s infinite alternate;
+        }
+
+        .cow.excited {
+            animation: cowExcited .35s infinite alternate;
+        }
+
+        .cow.bad {
+            animation: cowSad .4s infinite alternate;
+        }
+
+        @keyframes cowMoo {
+            from {
+                transform: scale(1) rotate(-2deg);
+            }
+
+            to {
+                transform: scale(1.09) rotate(2deg);
+            }
+        }
+
+        @keyframes cowExcited {
+            from {
+                transform: scale(1) rotate(-5deg);
+            }
+
+            to {
+                transform: scale(1.16) rotate(5deg);
+            }
+        }
+
+        @keyframes cowSad {
+            from {
+                transform: rotate(-3deg);
+            }
+
+            to {
+                transform: rotate(3deg);
+            }
+        }
+
+        .moo-label {
+            margin-top: 6px;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+        }
+
+        .sound-box {
+            width: min(620px, 88%);
+            margin-top: 18px;
+            background: white;
+            border: 2px solid var(--ink);
+            border-radius: 18px;
+            padding: 16px;
+            box-shadow: 0 5px 0 rgba(23, 22, 26, .08);
+        }
+
+        .sound-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--ink-soft);
+        }
+
+        .mic-status {
+            font-size: 10px;
+            opacity: .7;
+        }
+
+        .visualizer {
+            width: 100%;
+            height: 90px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            background: rgba(23, 22, 26, .035);
+        }
+
+        .bars {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 0 10px;
+        }
+
+        .bar {
+            width: 4px;
+            height: 8px;
+            border-radius: 10px;
+            background: var(--orange);
+            transform-origin: center;
+            transition: height .055s ease;
+        }
+
+        .pitch-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background: var(--ink);
+            opacity: .08;
+        }
+
+        .pitch-display {
+            width: 100%;
+            height: 55px;
+            margin-top: 10px;
+            border-radius: 10px;
+            background: rgba(255, 107, 44, .04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pitch-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(23, 22, 26, .06) 1px,
+                    transparent 1px);
+            background-size: 100% 11px;
+        }
+
+        #pitchCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .game-btn {
+            border: none;
+            font-family: "Fredoka", sans-serif;
+            font-weight: 600;
+            font-size: 17px;
+            padding: 14px 24px;
+            border-radius: 14px;
+            cursor: pointer;
+            color: white;
+            background: var(--orange);
+            box-shadow: 0 6px 0 var(--ink);
+            transition: transform .08s ease, box-shadow .08s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        .game-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .game-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 var(--ink);
+        }
+
+        .game-btn.secondary {
+            background: white;
+            color: var(--ink);
+            border: 2px solid var(--ink);
+            box-shadow: 0 5px 0 var(--line);
+        }
+
+        .game-btn.recording {
+            background: var(--pink);
+            animation: recordingPulse .7s infinite alternate;
+        }
+
+        @keyframes recordingPulse {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.035);
+            }
+        }
+
+        #recordingStatus {
+            margin-top: 13px;
+            height: 20px;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 12px;
+            color: var(--pink);
+            text-align: center;
+        }
+
+        #result {
+            width: min(620px, 88%);
+            margin-top: 12px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity .3s ease, transform .3s ease;
+        }
+
+        #result.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-score {
+            font-family: "Fredoka", sans-serif;
+            font-size: clamp(45px, 9vw, 72px);
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .result-label {
+            margin-top: 5px;
+            font-family: "IBM Plex Mono", monospace;
+            color: var(--ink-soft);
+        }
+
+        .progress {
+            width: 100%;
+            height: 12px;
+            margin-top: 12px;
+            background: rgba(23, 22, 26, .08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--green);
+            border-radius: 999px;
+            transition: width .8s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        .toast {
+            position: absolute;
+            font-family: "IBM Plex Mono", monospace;
+            font-size: 12px;
+            color: var(--ink);
+            background: white;
+            border: 1px solid var(--ink);
+            padding: 5px 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatUp 1.2s ease forwards;
+            z-index: 10;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) rotate(-4deg);
+            }
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, .92);
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay h2 {
+            font-family: "Fredoka", sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: "IBM Plex Mono", monospace;
+            max-width: 500px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: "IBM Plex Mono", monospace;
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        @media(max-width: 600px) {
+
+            #arena {
+                min-height: 620px;
+            }
+
+            .controls {
+                flex-direction: column;
+                width: 88%;
+            }
+
+            .game-btn {
+                width: 100%;
+            }
+
+            .sound-box {
+                padding: 12px;
+            }
+
+        }
+    </style>
+
+</head>
+
+<body>
+    <header>
+        <a class="back" href="index.html">
+            ← cow.fun
+        </a>
+        <div class="score-tag">
+            score:
+            <span id="totalScore">0</span>
+        </div>
+    </header>
+
+    <div class="title-block">
+        <h1>Moo Match</h1>
+        <div class="caption" id="caption">
+            can you moo like the cow?
+        </div>
+    </div>
+
+    <div id="arena">
+        <div class="cow-container">
+            <div class="cow" id="cow">
+                🐄
+            </div>
+            <div class="moo-label">
+                the cow is judging you
+            </div>
+        </div>
+
+        <div class="sound-box">
+            <div class="sound-title">
+                <span id="soundTitle">
+                    cow moo
+                </span>
+                <span class="mic-status" id="micStatus">
+                    waiting
+                </span>
+            </div>
+
+            <div class="visualizer">
+                <div class="pitch-line"></div>
+                <div class="bars" id="bars"></div>
+            </div>
+
+            <div class="pitch-display">
+                <div class="pitch-grid"></div>
+                <canvas id="pitchCanvas"></canvas>
+            </div>
+
+        </div>
+
+        <div class="controls">
+            <button class="game-btn secondary" id="playBtn">
+                Hear the moo
+            </button>
+            <button class="game-btn" id="recordBtn">
+                Hold to moo
+            </button>
+        </div>
+
+        <div id="recordingStatus"></div>
+
+        <div id="result">
+
+            <div class="result-score" id="resultScore">
+                0%
+            </div>
+
+            <div class="result-label" id="resultLabel">
+                moo similarity
+            </div>
+
+            <div class="progress">
+
+                <div class="progress-fill" id="progressFill"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="winOverlay">
+
+        <h2>MOO MASTER.</h2>
+
+        <p id="winText">
+            You have become dangerously good at sounding like a cow.
+        </p>
+
+        <button onclick="location.reload()">
+            moo again
+        </button>
+
+    </div>
+
+    <script>
+
+        const arena = document.getElementById("arena");
+        const cow = document.getElementById("cow");
+        const playBtn = document.getElementById("playBtn");
+        const recordBtn = document.getElementById("recordBtn");
+        const caption = document.getElementById("caption");
+        const recordingStatus = document.getElementById("recordingStatus");
+        const result = document.getElementById("result");
+        const resultScore = document.getElementById("resultScore");
+        const resultLabel = document.getElementById("resultLabel");
+        const progressFill = document.getElementById("progressFill");
+        const totalScore = document.getElementById("totalScore");
+        const bars = document.getElementById("bars");
+        const micStatus = document.getElementById("micStatus");
+        const soundTitle = document.getElementById("soundTitle");
+        const pitchCanvas = document.getElementById("pitchCanvas");
+
+        const BAR_COUNT = 55;
+
+        for (let i = 0; i < BAR_COUNT; i++) {
+
+            const bar = document.createElement("div");
+
+            bar.className = "bar";
+            bar.style.height = "7px";
+
+            bars.appendChild(bar);
+
+        }
+
+        const pitchCtx = pitchCanvas.getContext("2d");
+
+        function resizeCanvas() {
+
+            const rect = pitchCanvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+
+            pitchCanvas.width = rect.width * dpr;
+            pitchCanvas.height = rect.height * dpr;
+
+            pitchCtx.setTransform(
+                dpr,
+                0,
+                0,
+                dpr,
+                0,
+                0
+            );
+
+        }
+
+        resizeCanvas();
+
+        window.addEventListener(
+            "resize",
+            resizeCanvas
+        );
+
+        const mooFiles = [
+
+            "{{ url_for('static', filename='mooer/audio/moo1.wav') }}",
+            "{{ url_for('static', filename='mooer/audio/moo2.wav') }}",
+            "{{ url_for('static', filename='mooer/audio/moo3.wav') }}",
+            "{{ url_for('static', filename='mooer/audio/moo4.wav') }}",
+            "{{ url_for('static', filename='mooer/audio/moo5.wav') }}"
+
+        ];
+
+        let currentMoo = null;
+        let targetAnalysis = null;
+        let audioContext = null;
+        let targetSource = null;
+        let targetAnalyser = null;
+        let microphoneStream = null;
+        let microphoneSource = null;
+        let microphoneAnalyser = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recording = false;
+        let animationFrame = null;
+        let livePitchHistory = [];
+        let totalScoreValue = 0;
+
+        const captions = [
+
+            "can you moo like the cow?",
+            "the cow is watching.",
+            "this is serious bovine science.",
+            "please moo responsibly.",
+            "the cow has standards.",
+            "your vocal cords have been selected.",
+            "prepare your best cow impression.",
+            "this cow has heard better.",
+            "don't embarrass yourself in front of the cow.",
+            "the cow is taking notes.",
+            "moo harder.",
+            "that sounded suspiciously human.",
+            "the cow is concerned.",
+            "was that a moo or a scream?",
+            "somewhere, a cow just felt a disturbance.",
+            "the cow has entered the chat.",
+            "moo technology is advancing rapidly.",
+            "the cow believes in you.",
+            "probably.",
+            "this is what years of education leads to.",
+            "moo.",
+            "MOOOO.",
+            "MOOMOOMOOMOO.",
+            "the cow is becoming impatient.",
+            "bovine excellence awaits.",
+            "you were born for this.",
+            "your ancestors would be proud.",
+            "your ancestors were probably cows.",
+            "the cow is judging your technique.",
+            "excellent use of vocal machinery.",
+            "the moo force is strong with this one."
+
+        ];
+
+        const resultMessages = [
+
+            {
+                min: 95,
+                text: "PERFECT MOO",
+                caption: "that was disturbingly accurate."
+            },
+
+            {
+                min: 90,
+                text: "EXTREMELY COW",
+                caption: "the cow is slightly worried."
+            },
+
+            {
+                min: 80,
+                text: "VERY COW",
+                caption: "the cow has accepted you."
+            },
+
+            {
+                min: 70,
+                text: "GOOD MOO",
+                caption: "there is definitely cow in there."
+            },
+
+            {
+                min: 60,
+                text: "DECENT MOO",
+                caption: "the cow gives you a respectful nod."
+            },
+
+            {
+                min: 45,
+                text: "QUESTIONABLE",
+                caption: "the cow is checking the manual."
+            },
+
+            {
+                min: 30,
+                text: "THAT WAS SOMETHING",
+                caption: "we're not sure what, but it was something."
+            },
+
+            {
+                min: 0,
+                text: "NOT VERY COW",
+                caption: "the cow has requested a rematch."
+            }
+
+        ];
+
+        function randomInt(min, max) {
+
+            return Math.floor(
+                Math.random() * (max - min + 1)
+            ) + min;
+
+        }
+
+        async function getAudioContext() {
+
+            if (!audioContext) {
+
+                audioContext = new (
+                    window.AudioContext ||
+                    window.webkitAudioContext
+                )();
+
+            }
+
+            if (audioContext.state === "suspended") {
+                await audioContext.resume();
+            }
+
+            return audioContext;
+
+        }
+
+        function chooseMoo() {
+
+            const index = randomInt(
+                0,
+                mooFiles.length - 1
+            );
+
+            currentMoo = new Audio(
+                mooFiles[index]
+            );
+
+            currentMoo.preload = "auto";
+
+            currentMoo.addEventListener(
+                "loadeddata",
+                () => {
+                    analyseTarget();
+                },
+                {
+                    once: true
+                }
+            );
+
+        }
+
+        async function playMoo() {
+
+            if (!currentMoo) {
+                return;
+            }
+
+            const ctx = await getAudioContext();
+
+            currentMoo.pause();
+            currentMoo.currentTime = 0;
+
+            try {
+
+                if (!targetSource) {
+
+                    targetSource =
+                        ctx.createMediaElementSource(
+                            currentMoo
+                        );
+
+                    targetAnalyser =
+                        ctx.createAnalyser();
+
+                    targetAnalyser.fftSize = 2048;
+
+                    targetSource.connect(
+                        targetAnalyser
+                    );
+
+                    targetAnalyser.connect(
+                        ctx.destination
+                    );
+
+                }
+
+            } catch (error) {
+            }
+
+            soundTitle.textContent = "cow moo";
+            micStatus.textContent = "playing";
+
+            cow.classList.remove("bad");
+            cow.classList.add("mooing");
+
+            targetWaveAnimation();
+
+            currentMoo.play();
+
+            currentMoo.onended = () => {
+
+                cow.classList.remove("mooing");
+                micStatus.textContent = "ready";
+
+            };
+
+        }
+
+        function targetWaveAnimation() {
+
+            if (
+                !currentMoo ||
+                currentMoo.paused ||
+                !targetAnalyser
+            ) {
+                return;
+            }
+
+            const data =
+                new Uint8Array(
+                    targetAnalyser.frequencyBinCount
+                );
+
+            targetAnalyser.getByteFrequencyData(data);
+
+            const barElements = bars.children;
+
+            const step = Math.floor(
+                data.length / barElements.length
+            );
+
+            for (
+                let i = 0;
+                i < barElements.length;
+                i++
+            ) {
+
+                const value =
+                    data[i * step] || 0;
+
+                const height =
+                    Math.max(
+                        5,
+                        (value / 255) * 65
+                    );
+
+                barElements[i].style.height =
+                    height + "px";
+
+            }
+
+            drawPitchLine(targetAnalyser);
+
+            animationFrame =
+                requestAnimationFrame(
+                    targetWaveAnimation
+                );
+
+        }
+
+        function drawPitchLine(analyser) {
+
+            const width = pitchCanvas.clientWidth;
+            const height = pitchCanvas.clientHeight;
+
+            pitchCtx.clearRect(
+                0,
+                0,
+                width,
+                height
+            );
+
+            const data =
+                new Float32Array(
+                    analyser.fftSize
+                );
+
+            analyser.getFloatTimeDomainData(data);
+
+            const pitch =
+                detectPitch(
+                    data,
+                    audioContext.sampleRate
+                );
+
+            if (pitch <= 0) {
+                return;
+            }
+
+            const normalized =
+                Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        (
+                            Math.log(pitch) -
+                            Math.log(70)
+                        ) /
+                        (
+                            Math.log(500) -
+                            Math.log(70)
+                        )
+                    )
+                );
+
+            livePitchHistory.push(normalized);
+
+            if (
+                livePitchHistory.length > 120
+            ) {
+                livePitchHistory.shift();
+            }
+
+            pitchCtx.beginPath();
+
+            for (
+                let i = 0;
+                i < livePitchHistory.length;
+                i++
+            ) {
+
+                const x =
+                    width -
+                    (
+                        livePitchHistory.length - i
+                    ) *
+                    (width / 120);
+
+                const py =
+                    height -
+                    livePitchHistory[i] *
+                    height;
+
+                if (i === 0) {
+                    pitchCtx.moveTo(x, py);
+                } else {
+                    pitchCtx.lineTo(x, py);
+                }
+
+            }
+
+            pitchCtx.lineWidth = 2;
+            pitchCtx.strokeStyle = "#FF6B2C";
+            pitchCtx.stroke();
+
+        }
+
+        function detectPitch(buffer, sampleRate) {
+
+            let mean = 0;
+
+            for (
+                let i = 0;
+                i < buffer.length;
+                i++
+            ) {
+                mean += buffer[i];
+            }
+
+            mean /= buffer.length;
+
+            const clean =
+                new Float32Array(
+                    buffer.length
+                );
+
+            for (
+                let i = 0;
+                i < buffer.length;
+                i++
+            ) {
+                clean[i] = buffer[i] - mean;
+            }
+
+            let rms = 0;
+
+            for (
+                let i = 0;
+                i < clean.length;
+                i++
+            ) {
+                rms +=
+                    clean[i] *
+                    clean[i];
+            }
+
+            rms =
+                Math.sqrt(
+                    rms / clean.length
+                );
+
+            if (rms < 0.01) {
+                return 0;
+            }
+
+            let bestCorrelation = 0;
+            let bestOffset = -1;
+
+            const minFreq = 60;
+            const maxFreq = 600;
+
+            const minOffset =
+                Math.floor(
+                    sampleRate / maxFreq
+                );
+
+            const maxOffset =
+                Math.floor(
+                    sampleRate / minFreq
+                );
+
+            for (
+                let offset = minOffset;
+                offset <= maxOffset;
+                offset++
+            ) {
+
+                let correlation = 0;
+
+                for (
+                    let i = 0;
+                    i < clean.length - offset;
+                    i++
+                ) {
+
+                    correlation +=
+                        clean[i] *
+                        clean[i + offset];
+
+                }
+
+                correlation /=
+                    clean.length - offset;
+
+                if (
+                    correlation >
+                    bestCorrelation
+                ) {
+
+                    bestCorrelation =
+                        correlation;
+
+                    bestOffset =
+                        offset;
+
+                }
+
+            }
+
+            if (
+                bestOffset === -1 ||
+                bestCorrelation < 0.005
+            ) {
+                return 0;
+            }
+
+            return sampleRate / bestOffset;
+
+        }
+
+        async function startRecording() {
+
+            if (recording) {
+                return;
+            }
+
+            try {
+
+                microphoneStream =
+                    await navigator
+                        .mediaDevices
+                        .getUserMedia({
+                            audio: {
+                                echoCancellation: false,
+                                noiseSuppression: false,
+                                autoGainControl: false
+                            }
+                        });
+
+                const ctx =
+                    await getAudioContext();
+
+                microphoneSource =
+                    ctx.createMediaStreamSource(
+                        microphoneStream
+                    );
+
+                microphoneAnalyser =
+                    ctx.createAnalyser();
+
+                microphoneAnalyser.fftSize = 2048;
+                microphoneAnalyser.smoothingTimeConstant = .35;
+
+                microphoneSource.connect(
+                    microphoneAnalyser
+                );
+
+                mediaRecorder =
+                    new MediaRecorder(
+                        microphoneStream
+                    );
+
+                recordedChunks = [];
+
+                mediaRecorder.ondataavailable =
+                    event => {
+
+                        if (event.data.size > 0) {
+                            recordedChunks.push(
+                                event.data
+                            );
+                        }
+
+                    };
+
+                mediaRecorder.onstop =
+                    analyseRecording;
+
+                mediaRecorder.start();
+
+                recording = true;
+                livePitchHistory = [];
+
+                recordBtn.classList.add(
+                    "recording"
+                );
+
+                recordBtn.textContent =
+                    "Release to finish moo";
+
+                recordingStatus.textContent =
+                    "recording... MOOOOOO";
+
+                micStatus.textContent =
+                    "listening";
+
+                soundTitle.textContent =
+                    "your moo";
+
+                cow.classList.add(
+                    "mooing"
+                );
+
+                liveMicrophoneAnimation();
+
+            } catch (error) {
+
+                console.error(error);
+
+                recordingStatus.textContent =
+                    "microphone permission is required.";
+
+                micStatus.textContent =
+                    "microphone unavailable";
+
+            }
+
+        }
+
+        function liveMicrophoneAnimation() {
+
+            if (
+                !recording ||
+                !microphoneAnalyser
+            ) {
+                return;
+            }
+
+            const data =
+                new Uint8Array(
+                    microphoneAnalyser.frequencyBinCount
+                );
+
+            microphoneAnalyser.getByteFrequencyData(
+                data
+            );
+
+            const barElements = bars.children;
+
+            const step = Math.max(
+                1,
+                Math.floor(
+                    data.length /
+                    barElements.length
+                )
+            );
+
+            for (
+                let i = 0;
+                i < barElements.length;
+                i++
+            ) {
+
+                let total = 0;
+
+                for (
+                    let j = 0;
+                    j < 3;
+                    j++
+                ) {
+
+                    total +=
+                        data[
+                        Math.min(
+                            data.length - 1,
+                            i * step + j
+                        )
+                        ] || 0;
+
+                }
+
+                const value = total / 3;
+
+                const height =
+                    Math.max(
+                        5,
+                        (value / 255) * 70
+                    );
+
+                barElements[i].style.height =
+                    height + "px";
+
+            }
+
+            drawPitchLine(
+                microphoneAnalyser
+            );
+
+            animationFrame =
+                requestAnimationFrame(
+                    liveMicrophoneAnimation
+                );
+
+        }
+
+        function stopRecording() {
+
+            if (
+                !recording ||
+                !mediaRecorder
+            ) {
+                return;
+            }
+
+            recording = false;
+
+            mediaRecorder.stop();
+
+            recordBtn.classList.remove(
+                "recording"
+            );
+
+            recordBtn.textContent =
+                "Hold to moo";
+
+            recordingStatus.textContent =
+                "the cow is judging you...";
+
+            micStatus.textContent =
+                "analysing";
+
+            cow.classList.remove(
+                "mooing"
+            );
+
+            if (microphoneStream) {
+
+                microphoneStream
+                    .getTracks()
+                    .forEach(
+                        track => track.stop()
+                    );
+
+            }
+
+            if (animationFrame) {
+
+                cancelAnimationFrame(
+                    animationFrame
+                );
+
+            }
+
+        }
+
+        recordBtn.addEventListener(
+            "mousedown",
+            event => {
+
+                event.preventDefault();
+                startRecording();
+
+            }
+        );
+
+        recordBtn.addEventListener(
+            "mouseup",
+            event => {
+
+                event.preventDefault();
+                stopRecording();
+
+            }
+        );
+
+        recordBtn.addEventListener(
+            "mouseleave",
+            () => {
+
+                if (recording) {
+                    stopRecording();
+                }
+
+            }
+        );
+
+        recordBtn.addEventListener(
+            "touchstart",
+            event => {
+
+                event.preventDefault();
+                startRecording();
+
+            },
+            {
+                passive: false
+            }
+        );
+
+        recordBtn.addEventListener(
+            "touchend",
+            event => {
+
+                event.preventDefault();
+                stopRecording();
+
+            },
+            {
+                passive: false
+            }
+        );
+
+        async function analyseTarget() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        currentMoo.src
+                    );
+
+                const arrayBuffer =
+                    await response.arrayBuffer();
+
+                const ctx =
+                    await getAudioContext();
+
+                const buffer =
+                    await ctx.decodeAudioData(
+                        arrayBuffer
+                    );
+
+                targetAnalysis =
+                    analyseAudioBuffer(
+                        buffer
+                    );
+
+            } catch (error) {
+
+                console.error(
+                    "Target analysis failed:",
+                    error
+                );
+
+            }
+
+        }
+
+        function analyseAudioBuffer(buffer) {
+
+            const data =
+                buffer.getChannelData(0);
+
+            const sampleRate =
+                buffer.sampleRate;
+
+            const frameSize = 2048;
+            const hopSize = 512;
+
+            const pitches = [];
+            const volumes = [];
+
+            for (
+                let start = 0;
+                start + frameSize < data.length;
+                start += hopSize
+            ) {
+
+                const frame =
+                    data.slice(
+                        start,
+                        start + frameSize
+                    );
+
+                let sum = 0;
+
+                for (
+                    let i = 0;
+                    i < frame.length;
+                    i++
+                ) {
+
+                    sum +=
+                        frame[i] *
+                        frame[i];
+
+                }
+
+                const rms =
+                    Math.sqrt(
+                        sum / frame.length
+                    );
+
+                volumes.push(rms);
+
+                const pitch =
+                    detectPitch(
+                        frame,
+                        sampleRate
+                    );
+
+                if (pitch > 0) {
+                    pitches.push(pitch);
+                }
+
+            }
+
+            const start =
+                findAudioStart(data);
+
+            const end =
+                findAudioEnd(data);
+
+            return {
+
+                duration:
+                    (end - start) /
+                    sampleRate,
+
+                pitches,
+
+                volumes,
+
+                averagePitch:
+                    average(pitches),
+
+                averageVolume:
+                    average(volumes)
+
+            };
+
+        }
+
+        function findAudioStart(data) {
+
+            const threshold = .025;
+
+            for (
+                let i = 0;
+                i < data.length;
+                i++
+            ) {
+
+                if (
+                    Math.abs(data[i]) >
+                    threshold
+                ) {
+                    return i;
+                }
+
+            }
+
+            return 0;
+
+        }
+
+        function findAudioEnd(data) {
+
+            const threshold = .025;
+
+            for (
+                let i = data.length - 1;
+                i >= 0;
+                i--
+            ) {
+
+                if (
+                    Math.abs(data[i]) >
+                    threshold
+                ) {
+                    return i;
+                }
+
+            }
+
+            return data.length - 1;
+
+        }
+
+        function average(values) {
+
+            if (!values.length) {
+                return 0;
+            }
+
+            return (
+                values.reduce(
+                    (a, b) => a + b,
+                    0
+                ) /
+                values.length
+            );
+
+        }
+
+        function normalisePitchCurve(
+            pitches,
+            points = 40
+        ) {
+
+            const valid =
+                pitches.filter(
+                    p => p > 0
+                );
+
+            if (valid.length < 3) {
+                return [];
+            }
+
+            const min =
+                Math.min(...valid);
+
+            const logarithmic =
+                valid.map(
+                    pitch =>
+                        Math.log2(
+                            pitch /
+                            Math.max(
+                                min,
+                                1
+                            )
+                        )
+                );
+
+            const minimum =
+                Math.min(...logarithmic);
+
+            const maximum =
+                Math.max(...logarithmic);
+
+            const range =
+                Math.max(
+                    .01,
+                    maximum - minimum
+                );
+
+            const normalised =
+                logarithmic.map(
+                    value =>
+                        (value - minimum) /
+                        range
+                );
+
+            const result = [];
+
+            for (
+                let i = 0;
+                i < points;
+                i++
+            ) {
+
+                const position =
+                    (
+                        i /
+                        (points - 1)
+                    ) *
+                    (
+                        normalised.length - 1
+                    );
+
+                const low =
+                    Math.floor(position);
+
+                const high =
+                    Math.ceil(position);
+
+                const amount =
+                    position - low;
+
+                const a =
+                    normalised[low] || 0;
+
+                const b =
+                    normalised[high] || a;
+
+                result.push(
+                    a +
+                    (b - a) *
+                    amount
+                );
+
+            }
+
+            return result;
+
+        }
+
+        function comparePitchCurves(
+            target,
+            player
+        ) {
+
+            const a =
+                normalisePitchCurve(
+                    target,
+                    40
+                );
+
+            const b =
+                normalisePitchCurve(
+                    player,
+                    40
+                );
+
+            if (
+                !a.length ||
+                !b.length
+            ) {
+                return 0;
+            }
+
+            let difference = 0;
+
+            for (
+                let i = 0;
+                i < 40;
+                i++
+            ) {
+
+                difference +=
+                    Math.abs(
+                        a[i] -
+                        b[i]
+                    );
+
+            }
+
+            const averageDifference =
+                difference / 40;
+
+            return Math.max(
+                0,
+                100 -
+                averageDifference * 100
+            );
+
+        }
+
+        function calculateScore(
+            target,
+            player
+        ) {
+
+            if (!target) {
+                return 0;
+            }
+
+            const pitchScore =
+                comparePitchCurves(
+                    target.pitches,
+                    player.pitches
+                );
+
+            const pitchDifference =
+                Math.abs(
+                    Math.log2(
+                        Math.max(
+                            target.averagePitch,
+                            1
+                        ) /
+                        Math.max(
+                            player.averagePitch,
+                            1
+                        )
+                    )
+                );
+
+            const averagePitchScore =
+                Math.max(
+                    0,
+                    100 -
+                    pitchDifference * 100
+                );
+
+            const durationDifference =
+                Math.abs(
+                    target.duration -
+                    player.duration
+                );
+
+            const durationScore =
+                Math.max(
+                    0,
+                    100 -
+                    (
+                        durationDifference /
+                        Math.max(
+                            target.duration,
+                            .3
+                        )
+                    ) *
+                    100
+                );
+
+            const volumeRatio =
+                player.averageVolume /
+                Math.max(
+                    target.averageVolume,
+                    .001
+                );
+
+            const volumeDifference =
+                Math.abs(
+                    Math.log2(
+                        Math.max(
+                            volumeRatio,
+                            .01
+                        )
+                    )
+                );
+
+            const volumeScore =
+                Math.max(
+                    0,
+                    100 -
+                    volumeDifference * 35
+                );
+
+            let score =
+                pitchScore * .50 +
+                averagePitchScore * .15 +
+                durationScore * .25 +
+                volumeScore * .10;
+
+            if (
+                player.duration < .25
+            ) {
+                score *= .2;
+            }
+
+            if (
+                player.averageVolume < .008
+            ) {
+                score *= .1;
+            }
+
+            return Math.round(
+                Math.max(
+                    0,
+                    Math.min(
+                        100,
+                        score
+                    )
+                )
+            );
+
+        }
+
+        async function analyseRecording() {
+
+            try {
+
+                const blob =
+                    new Blob(
+                        recordedChunks,
+                        {
+                            type:
+                                mediaRecorder.mimeType
+                        }
+                    );
+
+                const arrayBuffer =
+                    await blob.arrayBuffer();
+
+                const ctx =
+                    await getAudioContext();
+
+                const audioBuffer =
+                    await ctx.decodeAudioData(
+                        arrayBuffer
+                    );
+
+                const player =
+                    analyseAudioBuffer(
+                        audioBuffer
+                    );
+
+                const score =
+                    calculateScore(
+                        targetAnalysis,
+                        player
+                    );
+
+                showResult(score);
+
+            } catch (error) {
+
+                console.error(error);
+
+                recordingStatus.textContent =
+                    "the cow couldn't understand that.";
+
+            }
+
+        }
+
+        function showResult(score) {
+
+            result.classList.add(
+                "visible"
+            );
+
+            resultScore.textContent =
+                score + "%";
+
+            progressFill.style.width =
+                score + "%";
+
+            totalScoreValue += score;
+
+            totalScore.textContent =
+                totalScoreValue;
+
+            const message =
+                resultMessages.find(
+                    item =>
+                        score >= item.min
+                );
+
+            resultLabel.textContent =
+                message.text;
+
+            caption.textContent =
+                message.caption;
+
+            recordingStatus.textContent = "";
+
+            cow.classList.remove(
+                "bad",
+                "excited"
+            );
+
+            if (score >= 85) {
+
+                cow.classList.add(
+                    "excited"
+                );
+
+                createToast(
+                    "THE COW APPROVES",
+                    "moo"
+                );
+
+            } else if (score < 40) {
+
+                cow.classList.add(
+                    "bad"
+                );
+
+                createToast(
+                    "WHAT WAS THAT",
+                    "moo"
+                );
+
+            } else {
+
+                createToast(
+                    "RESPECTABLE",
+                    "+moo"
+                );
+
+            }
+
+            if (score >= 95) {
+
+                setTimeout(
+                    showWin,
+                    1200
+                );
+
+            }
+
+        }
+
+        function createToast(
+            text,
+            symbol
+        ) {
+
+            const toast =
+                document.createElement(
+                    "div"
+                );
+
+            toast.className = "toast";
+
+            toast.textContent =
+                text +
+                " " +
+                symbol;
+
+            const rect =
+                arena.getBoundingClientRect();
+
+            toast.style.left =
+                (
+                    rect.width / 2 -
+                    80 +
+                    Math.random() * 100
+                ) +
+                "px";
+
+            toast.style.top =
+                (
+                    280 +
+                    Math.random() * 80
+                ) +
+                "px";
+
+            arena.appendChild(toast);
+
+            setTimeout(
+                () => toast.remove(),
+                1200
+            );
+
+        }
+
+        function showWin() {
+
+            const overlay =
+                document.getElementById(
+                    "winOverlay"
+                );
+
+            document.getElementById(
+                "winText"
+            ).textContent =
+                `You matched the cow with ${resultScore.textContent}. You are now officially far too good at mooing.`;
+
+            overlay.style.display = "flex";
+
+        }
+
+        setInterval(
+            () => {
+
+                if (recording) {
+                    return;
+                }
+
+                if (Math.random() < .45) {
+
+                    caption.style.opacity = "0";
+
+                    setTimeout(
+                        () => {
+
+                            caption.textContent =
+                                captions[
+                                randomInt(
+                                    0,
+                                    captions.length - 1
+                                )
+                                ];
+
+                            caption.style.opacity = "1";
+
+                        },
+                        120
+                    );
+
+                }
+
+            },
+            5000
+        );
+
+        playBtn.addEventListener(
+            "click",
+            playMoo
+        );
+
+        document.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.code === "Space" &&
+                    !event.repeat
+                ) {
+
+                    event.preventDefault();
+
+                    startRecording();
+
+                }
+
+            }
+        );
+
+        document.addEventListener(
+            "keyup",
+            event => {
+
+                if (
+                    event.code === "Space"
+                ) {
+
+                    event.preventDefault();
+
+                    stopRecording();
+
+                }
+
+            }
+        );
+
+        chooseMoo();
+
+        caption.textContent =
+            captions[
+            randomInt(
+                0,
+                captions.length - 1
+            )
+            ];
+
+    </script>
+
+</body>
+
+</html>

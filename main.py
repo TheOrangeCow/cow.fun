@@ -12,7 +12,6 @@ from routes.extensions import socketio
 from routes.websitedna import websitedna
 from routes.wikiemoji.wikiemoji import wikiemoji
 from routes.graveyard.graveyard import graveyard
-from routes.terra.terra import terra_bp, init_terra
 from routes.wordle import wordle_bp
 
 app = Flask(__name__)
@@ -38,11 +37,6 @@ app.register_blueprint(
 app.register_blueprint(
     graveyard,
     url_prefix="/graveyard"
-)
-
-app.register_blueprint(
-    terra_bp,
-    url_prefix="/terra"
 )
 
 
@@ -137,6 +131,10 @@ def terra_page():
 @app.route("/logic")
 def logic():
     return render_template("logic.html")
+
+@app.route("/mooer")
+def mooer():
+    return render_template("mooer.html")
 
 # Home and error pages
 
