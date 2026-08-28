@@ -13,6 +13,8 @@ from routes.websitedna import websitedna
 from routes.wikiemoji.wikiemoji import wikiemoji
 from routes.graveyard.graveyard import graveyard
 from routes.wordle import wordle_bp
+from routes.pacman.pacman import pacman_bp
+
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
@@ -37,6 +39,11 @@ app.register_blueprint(
 app.register_blueprint(
     graveyard,
     url_prefix="/graveyard"
+)
+
+app.register_blueprint(
+    pacman_bp,
+    url_prefix="/pacman"
 )
 
 
@@ -139,6 +146,10 @@ def mooer():
 @app.route("/blockparty")
 def blockparty():
     return render_template("blockparty.html")
+
+@app.route("/pacman")
+def pacman():
+    return render_template("pacman.html")
 
 # Home and error pages
 
