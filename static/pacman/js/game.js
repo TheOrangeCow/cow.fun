@@ -129,7 +129,7 @@ function updatePlayersPanel() {
         const chip = document.createElement("div");
         chip.className = "player-chip" + (p.alive ? "" : " dead");
         const you = p.id === myId ? " (you)" : "";
-        const state = p.alive ? "" : " — spectating";
+        const state = p.alive ? "" : " spectating";
         chip.innerHTML = `<span class="swatch" style="background:${p.color}"></span>${p.name}${you}: ${p.score}${state}`;
         playersPanel.appendChild(chip);
     });

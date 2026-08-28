@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw the Perfect Nerd - cow.fun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) 16px;
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+            min-height: 420px;
+        }
+
+        #refImg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0.22;
+            pointer-events: none;
+            user-select: none;
+            transition: opacity .15s ease;
+        }
+
+        #drawCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 0 20px clamp(16px, 4vw, 40px);
+        }
+
+        .ctrl-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            border: none;
+            border-radius: 999px;
+            padding: 12px 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--ink);
+        }
+
+        .ctrl-btn:active {
+            box-shadow: 0 1px 0 var(--ink);
+            transform: translateY(3px);
+        }
+
+        .ctrl-btn.primary {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .ctrl-btn.secondary {
+            background: #fff;
+            color: var(--ink);
+            border: 2px solid var(--ink);
+            box-shadow: 0 4px 0 var(--line);
+        }
+
+        .toggle-wrap {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        #winOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.9);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #winOverlay .score-big {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(48px, 10vw, 80px);
+            color: var(--orange);
+            margin: 0;
+            line-height: 1;
+        }
+
+        #winOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(24px, 5vw, 36px);
+            margin: 6px 0 14px;
+        }
+
+        #winOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 420px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #winOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">best: <span id="bestScore">--</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Draw the Perfect Nerd</h1>
+        <div class="caption" id="caption">study the nerd emoji, then turn off the guide and draw it from memory.</div>
+    </div>
+
+    <div id="arena">
+        <canvas id="drawCanvas"></canvas>
+    </div>
+
+    <div class="controls">
+        <button class="ctrl-btn secondary" id="clearBtn">clear</button>
+        <button class="ctrl-btn primary" id="judgeBtn">judge my nerd</button>
+        <label class="toggle-wrap">
+            <input type="checkbox" id="guideToggle" checked>
+            show guide
+        </label>
+    </div>
+
+    <div id="winOverlay">
+        <p class="score-big" id="winScore">100%</p>
+        <h2>a perfect nerd.</h2>
+        <p id="winMsg">The cow has never seen glasses drawn with such precision. Frame this. Or don't, it's a
+            canvas doodle.</p>
+        <button id="againBtn">draw another</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        const arena = document.getElementById('arena');
+        const refImg = document.getElementById('refImg');
+        const captionEl = document.getElementById('caption');
+        const bestScoreEl = document.getElementById('bestScore');
+        const clearBtn = document.getElementById('clearBtn');
+        const judgeBtn = document.getElementById('judgeBtn');
+        const guideToggle = document.getElementById('guideToggle');
+        const winOverlay = document.getElementById('winOverlay');
+        const winScore = document.getElementById('winScore');
+        const winMsg = document.getElementById('winMsg');
+        const againBtn = document.getElementById('againBtn');
+
+        let dpr = Math.max(1, window.devicePixelRatio || 1);
+        let W = 0, H = 0;
+        let targetPaths = [];
+        let targetPoints = [];
+        let strokes = [];
+        let currentStroke = null;
+        let drawing = false;
+        let bestScore = null;
+        let hasWon = false;
+
+        const captions = [
+            "abstract art. bold choice.",
+            "i see... something.",
+            "is that a potato with glasses?",
+            "getting warmer. sort of.",
+            "okay that's starting to look like a face.",
+            "the glasses are almost glasses-shaped.",
+            "respectable attempt.",
+            "certified nerd behavior.",
+            "very nerdy. the cow approves.",
+            "wow. actual nerd energy.",
+            "chef's kiss. pocket protector unlocked."
+        ];
+
+        function captionForScore(s) {
+            const idx = Math.min(captions.length - 1, Math.floor(s / 10));
+            return captions[idx];
+        }
+
+        function circlePts(cx, cy, r, a0, a1, steps) {
+            const pts = [];
+            for (let i = 0; i <= steps; i++) {
+                const a = a0 + (a1 - a0) * (i / steps);
+                pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+            }
+            return pts;
+        }
+
+        function linePts(x1, y1, x2, y2, steps) {
+            const pts = [];
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                pts.push({ x: x1 + (x2 - x1) * t, y: y1 + (y2 - y1) * t });
+            }
+            return pts;
+        }
+
+        function quadPts(x0, y0, cx, cy, x1, y1, steps) {
+            const pts = [];
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const mt = 1 - t;
+                const x = mt * mt * x0 + 2 * mt * t * cx + t * t * x1;
+                const y = mt * mt * y0 + 2 * mt * t * cy + t * t * y1;
+                pts.push({ x, y });
+            }
+            return pts;
+        }
+
+        function roundedRectPts(cx, cy, w, h, r, cornerSteps) {
+            const x0 = cx - w / 2, x1 = cx + w / 2;
+            const y0 = cy - h / 2, y1 = cy + h / 2;
+            const pts = [];
+            pts.push(...linePts(x0 + r, y0, x1 - r, y0, 3));
+            pts.push(...circlePts(x1 - r, y0 + r, r, -Math.PI / 2, 0, cornerSteps));
+            pts.push(...linePts(x1, y0 + r, x1, y1 - r, 3));
+            pts.push(...circlePts(x1 - r, y1 - r, r, 0, Math.PI / 2, cornerSteps));
+            pts.push(...linePts(x1 - r, y1, x0 + r, y1, 3));
+            pts.push(...circlePts(x0 + r, y1 - r, r, Math.PI / 2, Math.PI, cornerSteps));
+            pts.push(...linePts(x0, y1 - r, x0, y0 + r, 3));
+            pts.push(...circlePts(x0 + r, y0 + r, r, Math.PI, Math.PI * 1.5, cornerSteps));
+            return pts;
+        }
+
+
+        function buildTarget() {
+            const cx = W / 2, cy = H / 2;
+            const R = Math.min(W, H) * 0.34;
+
+            const paths = [];
+
+            paths.push(circlePts(cx, cy, R, 0, Math.PI * 2, 64));
+
+            const lensR = R * 0.32;
+            const lensDx = R * 0.38;
+            const eyeY = cy - R * 0.02;
+            const eyeCx1 = cx - lensDx, eyeCx2 = cx + lensDx;
+
+            paths.push(circlePts(eyeCx1, eyeY, lensR, 0, Math.PI * 2, 40));
+            paths.push(circlePts(eyeCx2, eyeY, lensR, 0, Math.PI * 2, 40));
+
+            paths.push(circlePts(eyeCx1, eyeY, lensR * 0.22, 0, Math.PI * 2, 16));
+            paths.push(circlePts(eyeCx2, eyeY, lensR * 0.22, 0, Math.PI * 2, 16));
+
+            paths.push(linePts(eyeCx1 + lensR, eyeY, eyeCx2 - lensR, eyeY, 4));
+
+            paths.push(linePts(eyeCx1 - lensR, eyeY, cx - R * 0.98, eyeY - R * 0.04, 4));
+            paths.push(linePts(eyeCx2 + lensR, eyeY, cx + R * 0.98, eyeY - R * 0.04, 4));
+
+            const browY = eyeY - lensR - R * 0.08;
+            paths.push(quadPts(eyeCx1 - lensR * 0.9, browY + R * 0.03, eyeCx1, browY - R * 0.04, eyeCx1 + lensR * 0.9, browY + R * 0.02, 10));
+            paths.push(quadPts(eyeCx2 - lensR * 0.9, browY + R * 0.02, eyeCx2, browY - R * 0.04, eyeCx2 + lensR * 0.9, browY + R * 0.03, 10));
+
+            const mouthCy = cy + R * 0.42;
+            const mouthHalfW = R * 0.36;
+            paths.push(quadPts(cx - mouthHalfW, mouthCy - R * 0.06, cx, mouthCy + R * 0.2, cx + mouthHalfW, mouthCy - R * 0.06, 20));
+
+            const toothW = R * 0.16, toothH = R * 0.16;
+            paths.push(roundedRectPts(cx - toothW * 0.55, mouthCy - R * 0.02, toothW, toothH, toothW * 0.15, 4));
+            paths.push(roundedRectPts(cx + toothW * 0.55, mouthCy - R * 0.02, toothW, toothH, toothW * 0.15, 4));
+
+            targetPaths = paths;
+            targetPoints = paths.flat();
+        }
+
+        function resizeCanvas() {
+            const rect = arena.getBoundingClientRect();
+            W = rect.width;
+            H = rect.height;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            buildTarget();
+            redraw();
+        }
+
+        function drawGuide() {
+            if (!guideToggle.checked) return;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(23,22,26,0.28)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 6]);
+            targetPaths.forEach(path => {
+                ctx.beginPath();
+                path.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+                ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        function drawStrokes() {
+            ctx.save();
+            ctx.strokeStyle = '#FF6B2C';
+            ctx.lineWidth = 4.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            strokes.forEach(path => {
+                if (path.length < 2) return;
+                ctx.beginPath();
+                path.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+                ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        function redraw() {
+            ctx.clearRect(0, 0, W, H);
+            drawGuide();
+            drawStrokes();
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startStroke(e) {
+            e.preventDefault();
+            drawing = true;
+            currentStroke = [];
+            strokes.push(currentStroke);
+            const p = getPos(e);
+            currentStroke.push(p);
+        }
+
+        function moveStroke(e) {
+            if (!drawing) return;
+            e.preventDefault();
+            const p = getPos(e);
+            const last = currentStroke[currentStroke.length - 1];
+            if (!last || Math.hypot(p.x - last.x, p.y - last.y) >= 3) {
+                currentStroke.push(p);
+                redraw();
+            }
+        }
+
+        function endStroke() {
+            drawing = false;
+            currentStroke = null;
+        }
+
+        canvas.addEventListener('mousedown', startStroke);
+        canvas.addEventListener('mousemove', moveStroke);
+        window.addEventListener('mouseup', endStroke);
+        canvas.addEventListener('touchstart', startStroke, { passive: false });
+        canvas.addEventListener('touchmove', moveStroke, { passive: false });
+        canvas.addEventListener('touchend', endStroke);
+
+        guideToggle.addEventListener('change', () => {
+            refImg.style.opacity = guideToggle.checked ? '0.22' : '0';
+            if (!guideToggle.checked) {
+
+                strokes = [];
+                captionEl.textContent = "guide's off. draw it from memory now.";
+            }
+            redraw();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            strokes = [];
+            redraw();
+            captionEl.textContent = "study the nerd emoji, then turn off the guide and draw it from memory.";
+        });
+
+        function nearestDist(pt, arr) {
+            let best = Infinity;
+            for (let i = 0; i < arr.length; i++) {
+                const d = Math.hypot(pt.x - arr[i].x, pt.y - arr[i].y);
+                if (d < best) best = d;
+            }
+            return best;
+        }
+
+        function looksLikeSquare(strokeList) {
+            return strokeList.some(stroke => strokeIsSquare(stroke));
+        }
+
+        function strokeIsSquare(pts) {
+            if (pts.length < 10) return false;
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            pts.forEach(p => {
+                if (p.x < minX) minX = p.x;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.y > maxY) maxY = p.y;
+            });
+            const w = maxX - minX, h = maxY - minY;
+            if (w < 20 || h < 20) return false;
+            const aspect = w / h;
+            if (aspect < 0.75 || aspect > 1.35) return false;
+
+            const tol = Math.max(w, h) * 0.07;
+            let onEdge = 0;
+            pts.forEach(p => {
+                const nearEdge =
+                    Math.abs(p.x - minX) < tol || Math.abs(p.x - maxX) < tol ||
+                    Math.abs(p.y - minY) < tol || Math.abs(p.y - maxY) < tol;
+                if (nearEdge) onEdge++;
+            });
+
+            return (onEdge / pts.length) > 0.85;
+        }
+
+        function scoreDrawing() {
+            const drawn = strokes.flat();
+            if (drawn.length < 15) {
+                captionEl.textContent = "you have to actually draw something first.";
+                return null;
+            }
+
+            const diag = Math.hypot(W, H);
+            const norm = diag * 0.06;
+
+            let coverSum = 0;
+            targetPoints.forEach(t => {
+                coverSum += Math.min(1, nearestDist(t, drawn) / norm);
+            });
+            const coverageErr = coverSum / targetPoints.length;
+
+            let precSum = 0;
+            drawn.forEach(d => {
+                precSum += Math.min(1, nearestDist(d, targetPoints) / norm);
+            });
+            const precisionErr = precSum / drawn.length;
+
+            const combinedErr = coverageErr * 0.65 + precisionErr * 0.35;
+            let score = Math.round((1 - combinedErr) * 100);
+            score = Math.max(1, Math.min(100, score));
+            return score;
+        }
+
+        judgeBtn.addEventListener('click', () => {
+            if (guideToggle.checked) {
+                captionEl.textContent = "turn off the guide first.";
+                return;
+            }
+
+            const drawn = strokes.flat();
+            if (looksLikeSquare(strokes)) {
+                captionEl.textContent = "why did you draw adam.";
+                return;
+            }
+
+            const score = scoreDrawing();
+            if (score === null) return;
+
+            captionEl.textContent = `${score}% nerd. ${captionForScore(score)}`;
+
+            if (bestScore === null || score > bestScore) {
+                bestScore = score;
+                bestScoreEl.textContent = bestScore + '%';
+            }
+
+            if (score >= 90 && !hasWon) {
+                hasWon = true;
+                winScore.textContent = score + '%';
+                winMsg.textContent = score === 100
+                    ? "Somehow, perfectly. The cow doesn't know how to feel about this."
+                    : "That is an unreasonably good nerd for a mouse and a trackpad.";
+                setTimeout(() => { winOverlay.style.display = 'flex'; }, 300);
+            }
+        });
+
+        againBtn.addEventListener('click', () => {
+            winOverlay.style.display = 'none';
+            strokes = [];
+            redraw();
+            captionEl.textContent = "go on then. an even better nerd.";
+        });
+
+        window.addEventListener('resize', () => {
+            strokes = [];
+            resizeCanvas();
+        });
+
+        resizeCanvas();
+    </script>
+
+</body>
+
+</html>

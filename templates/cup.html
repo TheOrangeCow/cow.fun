@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cup Chaos - cow.fun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .score-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+            min-height: 420px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        #startOverlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            gap: 16px;
+            z-index: 20;
+            background: rgba(253, 252, 246, 0.6);
+            backdrop-filter: blur(1px);
+        }
+
+        #startOverlay button,
+        #playAgainBtn {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 5px 0 var(--ink);
+        }
+
+        #startOverlay button:active,
+        #playAgainBtn:active {
+            box-shadow: 0 2px 0 var(--ink);
+            transform: translateY(3px);
+        }
+
+        .cup-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .cup {
+            position: absolute;
+            bottom: 60px;
+            width: 84px;
+            height: 96px;
+            cursor: pointer;
+            transition: left .5s cubic-bezier(.65, 0, .35, 1);
+            transform-origin: bottom center;
+        }
+
+        .cup .cup-body {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, var(--orange), #E8541A);
+            clip-path: polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%);
+            box-shadow: 0 6px 0 var(--ink);
+            transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), background .2s ease;
+        }
+
+        .cup .cup-rim {
+            position: absolute;
+            top: -6px;
+            left: 12%;
+            width: 76%;
+            height: 14px;
+            border-radius: 999px;
+            background: #FF8A57;
+            box-shadow: 0 3px 0 var(--ink);
+        }
+
+        .cup.lifted .cup-body {
+            transform: translateY(-56px) rotate(-8deg);
+        }
+
+        .cup.lifted .cup-rim {
+            transform: translateY(-56px) rotate(-8deg);
+        }
+
+        .cup.wrong .cup-body {
+            background: linear-gradient(180deg, #d8d5c9, #b9b6ac);
+        }
+
+        .cup.correct .cup-body {
+            background: linear-gradient(180deg, var(--pink), #E0388C);
+        }
+
+        .cup .badge {
+            position: absolute;
+            bottom: -34px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 22px;
+        }
+
+        .ball {
+            position: absolute;
+            bottom: 66px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #fff, var(--pink) 60%, #B8006B 100%);
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+            transform: translateX(-50%);
+            z-index: 1;
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+
+        .toast {
+            position: absolute;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--ink);
+            padding: 4px 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: floatUp 1s ease forwards;
+            z-index: 5;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -30px);
+            }
+        }
+
+        #endOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(23, 22, 26, 0.9);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        #endOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #endOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 420px;
+            color: #ddd;
+            margin: 0 0 24px;
+        }
+
+        #endOverlay button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="score-tag">round: <span id="score">0</span></div>
+    </header>
+
+    <div class="title-block">
+        <h1>Cup Chaos</h1>
+        <div class="caption" id="caption">three cups. one ball. good luck.</div>
+    </div>
+
+    <div id="arena">
+        <div id="startOverlay">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink-soft);max-width:320px;">
+                Watch the ball, watch the swap, then pick the cup.<br>Every correct guess adds a cup.
+            </div>
+            <button id="startBtn">start shuffling</button>
+        </div>
+        <div class="cup-track" id="track"></div>
+    </div>
+
+    <div id="endOverlay">
+        <h2 id="endTitle">nope.</h2>
+        <p id="endText">Not this time. The cow saw it coming.</p>
+        <button id="playAgainBtn">try again</button>
+    </div>
+
+    <script>
+        const arena = document.getElementById('arena');
+        const track = document.getElementById('track');
+        const scoreEl = document.getElementById('score');
+        const captionEl = document.getElementById('caption');
+        const startOverlay = document.getElementById('startOverlay');
+        const startBtn = document.getElementById('startBtn');
+        const endOverlay = document.getElementById('endOverlay');
+        const endTitle = document.getElementById('endTitle');
+        const endText = document.getElementById('endText');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+
+        let numCups = 3;
+        let ballIndex = 0;
+        let cups = [];
+        let ball = null;
+        let positions = []; // slot -> x px, indexed by slot 0..n-1
+        let cupSlot = [];   // cupIndex -> current slot
+        let locked = true;
+        let round = 0;
+
+        const captions = [
+            "three cups. one ball. good luck.",
+            "nice eye. one more cup joins.",
+            "getting trickier now.",
+            "the shuffles are getting sneaky.",
+            "how are you still tracking this.",
+            "this is basically witchcraft at this point.",
+            "the cow is impressed.",
+            "legend status incoming.",
+            "ok this is unfair for the cups.",
+            "is your eye actually a camera."
+        ];
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+        function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+
+        function updateCaption() {
+            captionEl.style.opacity = 0;
+            setTimeout(() => {
+                captionEl.textContent = captions[Math.min(round, captions.length - 1)];
+                captionEl.style.opacity = 1;
+            }, 120);
+        }
+
+        function computeSlots() {
+            const rect = track.getBoundingClientRect();
+            const cupW = 84;
+            const margin = 24;
+            const usable = rect.width - margin * 2;
+            const gap = numCups > 1 ? usable / (numCups - 1) : 0;
+            positions = [];
+            for (let i = 0; i < numCups; i++) {
+                const x = numCups === 1 ? rect.width / 2 - cupW / 2 : margin + gap * i;
+                positions.push(Math.max(4, Math.min(rect.width - cupW - 4, x)));
+            }
+        }
+
+        function buildRound() {
+            track.innerHTML = '';
+            cups = [];
+            cupSlot = [];
+            computeSlots();
+
+            ballIndex = randInt(0, numCups - 1);
+
+            ball = document.createElement('div');
+            ball.className = 'ball';
+            track.appendChild(ball);
+
+            for (let i = 0; i < numCups; i++) {
+                const cup = document.createElement('div');
+                cup.className = 'cup lifted';
+                cup.innerHTML = '<div class="cup-rim"></div><div class="cup-body"></div>';
+                cup.style.left = positions[i] + 'px';
+                track.appendChild(cup);
+                cups.push(cup);
+                cupSlot[i] = i;
+                cup.addEventListener('click', () => onCupClick(i));
+            }
+
+            placeBallUnder(ballIndex);
+            ball.style.opacity = '1';
+            locked = true;
+
+            setTimeout(() => {
+                cups.forEach(c => c.classList.remove('lifted'));
+                setTimeout(() => {
+                    ball.style.opacity = '0';
+                    setTimeout(() => shuffle(), 300);
+                }, 500);
+            }, 700);
+        }
+
+        function placeBallUnder(cupIdx) {
+            const slot = cupSlot[cupIdx];
+            const x = positions[slot] + 84 / 2;
+            ball.style.left = x + 'px';
+        }
+
+        function slotOfCup(cupIdx) {
+            return cupSlot[cupIdx];
+        }
+
+        function swapCups(a, b) {
+            const slotA = cupSlot[a];
+            const slotB = cupSlot[b];
+            cupSlot[a] = slotB;
+            cupSlot[b] = slotA;
+            cups[a].style.left = positions[slotB] + 'px';
+            cups[b].style.left = positions[slotA] + 'px';
+        }
+
+        function shuffle() {
+            const swapCount = Math.min(24, 6 + round * 3);
+            let i = 0;
+            const stepMs = 460;
+
+            function doSwap() {
+                if (i >= swapCount) {
+                    locked = false;
+                    captionEl.textContent = "pick a cup.";
+                    return;
+                }
+                let a = randInt(0, numCups - 1);
+                let b = randInt(0, numCups - 1);
+                while (b === a) b = randInt(0, numCups - 1);
+                swapCups(a, b);
+                i++;
+                setTimeout(doSwap, stepMs);
+            }
+            doSwap();
+        }
+
+        function showToast(text) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = text;
+            arena.appendChild(t);
+            setTimeout(() => t.remove(), 1000);
+        }
+
+        function onCupClick(cupIdx) {
+            if (locked) return;
+            locked = true;
+
+            cups.forEach(c => c.classList.add('lifted'));
+            placeBallUnder(ballIndex);
+            ball.style.opacity = '1';
+
+            const correct = cupIdx === ballIndex;
+
+            setTimeout(() => {
+                if (correct) {
+                    cups[cupIdx].classList.add('correct');
+                    round++;
+                    scoreEl.textContent = round;
+                    showToast('+1 cup incoming');
+                    updateCaption();
+                    setTimeout(() => {
+                        numCups++;
+                        buildRound();
+                    }, 900);
+                } else {
+                    cups[cupIdx].classList.add('wrong');
+                    cups[ballIndex].classList.add('correct');
+                    setTimeout(() => endGame(false), 700);
+                }
+            }, 250);
+        }
+
+        function endGame(won) {
+            if (won) {
+                endTitle.textContent = 'ok. you win.';
+                endText.textContent = `You tracked the ball through ${round} rounds. The cow is officially concerned.`;
+            } else {
+                endTitle.textContent = 'nope.';
+                endText.textContent = `You made it ${round} round${round === 1 ? '' : 's'} deep, with ${numCups} cups on the table. Try again?`;
+            }
+            endOverlay.style.display = 'flex';
+        }
+
+        startBtn.addEventListener('click', () => {
+            startOverlay.style.display = 'none';
+            buildRound();
+        });
+
+        playAgainBtn.addEventListener('click', () => {
+            endOverlay.style.display = 'none';
+            numCups = 3;
+            round = 0;
+            scoreEl.textContent = 0;
+            captionEl.textContent = captions[0];
+            startOverlay.style.display = 'flex';
+        });
+
+        window.addEventListener('resize', () => {
+            if (locked && cups.length) {
+                computeSlots();
+                cups.forEach((c, i) => {
+                    c.style.left = positions[cupSlot[i]] + 'px';
+                });
+                if (ball.style.opacity === '1') placeBallUnder(ballIndex);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

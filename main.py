@@ -151,6 +151,14 @@ def blockparty():
 def pacman():
     return render_template("pacman.html")
 
+@app.route("/nerd")
+def nerd():
+    return render_template("nerd.html")
+
+@app.route("/cup")
+def cup():
+    return render_template("cup.html")
+
 # Home and error pages
 
 @app.route("/index.html")
