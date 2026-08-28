@@ -2,7 +2,7 @@ import random
 import time
 import itertools
 
-import maze as M
+import routes.pacman.maze as M
 
 TICK_HZ = 15
 TICK_DT = 1.0 / TICK_HZ
