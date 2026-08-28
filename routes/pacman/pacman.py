@@ -1,14 +1,14 @@
 import random
 import string
 
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO, join_room as sio_join_room, emit
+from flask import render_template, request, Blueprint
+from flask_socketio import join_room as sio_join_room, emit
 
 from game import GameRoom, TICK_DT
-
-from flask import Blueprint
 from routes.extensions import socketio
+
 pacman_bp = Blueprint("pacman_bp", __name__)
+
 
 rooms = {}
 sid_room = {}
@@ -52,12 +52,6 @@ def room_loop(code):
         room_loops_running.discard(code)
         if code in rooms and not rooms[code].players:
             del rooms[code]
-
-
-@pacman_bp.route("/")
-def index():
-    return render_template("index.html")
-
 
 @socketio.on("Pconnect")
 def on_connect():
