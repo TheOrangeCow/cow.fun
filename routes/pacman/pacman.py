@@ -4,7 +4,7 @@ import string
 from flask import render_template, request, Blueprint
 from flask_socketio import join_room as sio_join_room, emit
 
-from game import GameRoom, TICK_DT
+from routes.pacman.game import GameRoom, TICK_DT
 from routes.extensions import socketio
 
 pacman_bp = Blueprint("pacman_bp", __name__)
