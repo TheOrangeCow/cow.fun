@@ -605,7 +605,8 @@
 
         renderPopular();
         renderGrid();
-        allCount.textContent = `${games.length +1} games`;
+        allCount.textContent = `${games.length} games`;
+        searchcount.textContent = `${games.length} games`;
         searchInput.addEventListener("input", applySearch);
     </script>
 
