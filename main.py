@@ -57,10 +57,6 @@ def index():
 def button():
     return render_template("button.html")
 
-@app.route("/canvas")
-def canvas():
-    return render_template("canvas.html")
-
 @app.route("/checkboxs")
 def checkboxs():
     return render_template("checkboxs.html")
@@ -85,7 +81,6 @@ def loading():
 def signup():
     return render_template("signup.html")
 
-
 @app.route("/cowclicker")
 def cowclicker():
     return render_template("cowclicker.html")
@@ -102,9 +97,6 @@ def escapepop():
 def hackersim():
     return render_template("hackersim.html")
 
-@app.route("/_paintsim")
-def paintsim():
-    return render_template("paintsim.html")
 
 @app.route("/stackbuttons")
 def stackbuttons():
@@ -117,7 +109,6 @@ def websitedna_page():
 @app.route("/wikiemoji")
 def wikiemoji2():
     return render_template("wikiemoji.html")
-
 
 @app.route("/graveyard")
 def graveyard_page():
