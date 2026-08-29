@@ -594,7 +594,7 @@
                 if (match) popVisible++;
             });
 
-            searchCount.textContent = q ? `${visible} match${visible === 1 ? "" : "es"}` : `${games.length} games`;
+            searchcount.textContent = q ? `${visible} match${visible === 1 ? "" : "es"}` : `${games.length} games`;
             emptyState.style.display = (q && visible === 0) ? "block" : "none";
             mainGrid.style.display = (q && visible === 0) ? "none" : "grid";
 
