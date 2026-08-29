@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save The Ice Cube - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --blue: #4AA9FF;
+            --blue-dark: #1877D2;
+            --ice: #BDEBFF;
+            --line: rgba(23, 22, 26, 0.14);
+            --red: #FF4F4F;
+            --green: #42B883;
+            --yellow: #F0A52B;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .time-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: var(--ink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+        }
+
+        #game {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 18px;
+            margin: 10px clamp(12px, 3vw, 40px) 30px;
+        }
+
+        #arena {
+            position: relative;
+            min-height: 600px;
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(74, 169, 255, 0.12), transparent 35%),
+                radial-gradient(circle at 80% 80%, rgba(74, 169, 255, 0.08), transparent 40%),
+                linear-gradient(180deg, #ffffff, #f4fbff);
+        }
+
+        .temperature {
+            position: absolute;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 5;
+        }
+
+        .temperature-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-soft);
+        }
+
+        #temperature {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(42px, 7vw, 72px);
+            font-weight: 600;
+            line-height: 1;
+            transition: color .2s ease;
+        }
+
+        #status {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        #eventNotice {
+            position: absolute;
+            top: 112px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(90%, 520px);
+            padding: 13px 18px;
+            border-radius: 14px;
+            background: rgba(23, 22, 26, .94);
+            color: white;
+            text-align: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            z-index: 15;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
+        }
+
+        #eventNotice.warning {
+            background: rgba(240, 165, 43, .96);
+        }
+
+        #eventNotice.danger {
+            background: rgba(255, 79, 79, .96);
+        }
+
+        #eventNotice.good {
+            background: rgba(66, 184, 131, .96);
+        }
+
+        #eventNotice.active {
+            display: block;
+            animation: eventPop .25s ease;
+        }
+
+        @keyframes eventPop {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .ice-area {
+            position: absolute;
+            inset: 120px 20px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #ice {
+            position: relative;
+            width: 220px;
+            height: 260px;
+            background: linear-gradient(135deg, #e9fbff, #91dfff);
+            border: 4px solid rgba(24, 119, 210, .35);
+            border-radius: 38px 45px 32px 42px;
+            box-shadow:
+                0 20px 40px rgba(24, 119, 210, .18),
+                inset -20px -20px 40px rgba(24, 119, 210, .12),
+                inset 15px 15px 25px rgba(255, 255, 255, .8);
+            transform: rotate(-3deg);
+            transition:
+                width .5s ease,
+                height .5s ease,
+                border-radius .5s ease,
+                filter .3s ease,
+                transform .2s ease;
+        }
+
+        #ice.unstable {
+            animation: wobble .18s infinite alternate;
+        }
+
+        #ice.cracked {
+            filter: contrast(1.05);
+        }
+
+        #ice.cracked::after {
+            content: "";
+            position: absolute;
+            width: 90px;
+            height: 4px;
+            background: rgba(24, 119, 210, .5);
+            left: 65px;
+            top: 115px;
+            transform: rotate(-25deg);
+            box-shadow:
+                18px 12px 0 -1px rgba(24, 119, 210, .4),
+                -10px 25px 0 -1px rgba(24, 119, 210, .4);
+        }
+
+        @keyframes wobble {
+            from {
+                transform: rotate(-5deg) translateX(-2px);
+            }
+
+            to {
+                transform: rotate(4deg) translateX(2px);
+            }
+        }
+
+        .water {
+            position: absolute;
+            bottom: 5px;
+            width: 270px;
+            height: 25px;
+            background: rgba(74, 169, 255, .15);
+            border-radius: 50%;
+            filter: blur(2px);
+            transition: width .5s ease;
+        }
+
+        #temperatureBar {
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            height: 14px;
+            background: rgba(23, 22, 26, .08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        #temperatureFill {
+            height: 100%;
+            width: 0%;
+            background: var(--blue);
+            border-radius: inherit;
+            transition: width .3s ease, background .3s ease;
+        }
+
+        #shop {
+            border: 2px solid var(--line);
+            border-radius: 24px;
+            background: #fff;
+            padding: 18px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .shop-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 25px;
+            margin-bottom: 3px;
+        }
+
+        .shop-subtitle {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--ink-soft);
+            font-size: 11px;
+            margin-bottom: 16px;
+        }
+
+        .item {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 11px;
+            margin-bottom: 9px;
+            background: #fff;
+            transition: border-color .15s ease, transform .15s ease, opacity .2s ease;
+        }
+
+        .item:hover {
+            border-color: rgba(74, 169, 255, .6);
+            transform: translateY(-1px);
+        }
+
+        .item.bought {
+            background: #f0fff9;
+            border-color: rgba(66, 184, 131, .5);
+        }
+
+        .item.broken {
+            background: #fff1f1;
+            border-color: rgba(255, 79, 79, .45);
+            opacity: .75;
+        }
+
+        .item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .item-name {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 17px;
+        }
+
+        .item-cost {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            background: var(--ink);
+            color: white;
+            border-radius: 999px;
+            padding: 4px 7px;
+            white-space: nowrap;
+        }
+
+        .item-effect {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--ink-soft);
+            margin: 5px 0 8px;
+        }
+
+        .buy {
+            width: 100%;
+            border: none;
+            border-radius: 9px;
+            padding: 8px;
+            background: var(--blue);
+            color: #fff;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .buy:hover {
+            background: var(--blue-dark);
+        }
+
+        .buy:disabled {
+            background: #ddd;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        .bought .buy {
+            background: var(--green);
+            cursor: default;
+        }
+
+        .broken .buy {
+            background: #c7c7c7;
+            color: #777;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .stat {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--ink-soft);
+            font-size: 9px;
+        }
+
+        .stat-value {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 20px;
+        }
+
+        #winOverlay,
+        #meltOverlay {
+            position: absolute;
+            inset: 0;
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 50;
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        #winOverlay {
+            background: rgba(23, 22, 26, .92);
+        }
+
+        #meltOverlay {
+            background: rgba(80, 110, 125, .94);
+            z-index: 40;
+        }
+
+        #winOverlay h2,
+        #meltOverlay h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(30px, 6vw, 52px);
+            margin: 0 0 14px;
+        }
+
+        #meltOverlay h2 {
+            font-size: clamp(34px, 7vw, 60px);
+        }
+
+        #winOverlay p,
+        #meltOverlay p {
+            font-family: 'IBM Plex Mono', monospace;
+            max-width: 500px;
+            color: #ddd;
+            margin: 0 0 24px;
+            line-height: 1.7;
+        }
+
+        .overlay-button {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--blue);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        @media (max-width: 850px) {
+            #game {
+                grid-template-columns: 1fr;
+            }
+
+            #shop {
+                max-height: none;
+            }
+
+            #arena {
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            #ice {
+                width: 160px;
+                height: 200px;
+            }
+
+            .ice-area {
+                inset: 120px 10px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+        <div class="time-tag">survived: <span id="time">0.0</span>s</div>
+    </header>
+
+    <div class="title-block">
+        <h1>Save The Ice Cube</h1>
+        <div class="caption">keep it frozen. spend your survival time wisely.</div>
+    </div>
+
+    <div id="game">
+
+        <div id="arena">
+
+            <div class="temperature">
+                <div class="temperature-label">ICE TEMPERATURE</div>
+                <div id="temperature">-100°C</div>
+                <div id="status">warming up...</div>
+            </div>
+
+            <div id="eventNotice"></div>
+
+            <div class="ice-area">
+                <div class="water"></div>
+                <div id="ice"></div>
+            </div>
+
+            <div id="temperatureBar">
+                <div id="temperatureFill"></div>
+            </div>
+
+            <div id="meltOverlay">
+                <h2>the ice cube melted.</h2>
+                <p id="meltText">
+                    You survived for 0 seconds, but the cube couldn't take it anymore.
+                </p>
+                <button class="overlay-button" id="continueButton">try again</button>
+            </div>
+
+            <div id="winOverlay">
+                <h2>you stopped winter.</h2>
+                <p>
+                    You bought the Ice Age upgrade and completely defeated
+                    the heat. The ice cube is now colder than physics probably
+                    intended.
+                </p>
+                <button class="overlay-button" onclick="location.reload()">go again</button>
+            </div>
+
+        </div>
+
+        <div id="shop">
+
+            <div class="shop-title">Ice Shop</div>
+            <div class="shop-subtitle">spend seconds you've survived</div>
+
+            <div id="items"></div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">WARMING</div>
+                    <div class="stat-value" id="warmingRate">+6°C/s</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">ITEMS</div>
+                    <div class="stat-value" id="itemsBought">0/10</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const temperatureEl = document.getElementById("temperature");
+        const temperatureFill = document.getElementById("temperatureFill");
+        const warmingRateEl = document.getElementById("warmingRate");
+        const timeEl = document.getElementById("time");
+        const itemsBoughtEl = document.getElementById("itemsBought");
+        const itemsContainer = document.getElementById("items");
+        const ice = document.getElementById("ice");
+        const winOverlay = document.getElementById("winOverlay");
+        const meltOverlay = document.getElementById("meltOverlay");
+        const meltText = document.getElementById("meltText");
+        const continueButton = document.getElementById("continueButton");
+        const eventNotice = document.getElementById("eventNotice");
+        const statusEl = document.getElementById("status");
+
+        const BASE_WARMING = 6;
+        const STARTING_TEMPERATURE = -100;
+
+        let temperature = STARTING_TEMPERATURE;
+        let survivalTime = 0;
+        let icePoints = 0;
+        let lastTime = performance.now();
+        let gameOver = false;
+
+        let coldWindTimer = 0;
+        let powerCutTimer = 0;
+        let iceCrackTimer = 0;
+        let rainTimer = 0;
+
+        let nextEventTime = 15 + Math.random() * 10;
+        let pendingEvent = null;
+        let eventWarningTimer = 0;
+        let eventCooldown = 0;
+
+        let motorUses = 0;
+
+        const items = [
+            {
+                name: "Shade",
+                cost: 5,
+                effect: "−2.5°C/s",
+                type: "rate",
+                cooling: 2.5,
+                unlimited: true
+            },
+            {
+                name: "Hand-held fan",
+                cost: 12,
+                effect: "−5.5°C/s",
+                type: "rate",
+                cooling: 5.5,
+                unlimited: true
+            },
+            {
+                name: "Motor fan",
+                cost: 20,
+                effect: "−7°C/s",
+                type: "rate",
+                cooling: 7,
+                unlimited: false,
+                duration: 10,
+                recharge: 8
+            },
+            {
+                name: "Hurricane",
+                cost: 40,
+                effect: "−11°C/s",
+                type: "rate",
+                cooling: 11,
+                unlimited: false,
+                duration: 8,
+                recharge: 10
+            },
+            {
+                name: "More ice",
+                cost: 55,
+                effect: "−25°C instantly",
+                type: "instant",
+                amount: 25
+            },
+            {
+                name: "Snow machine",
+                cost: 70,
+                effect: "−15°C/s",
+                type: "rate",
+                cooling: 15,
+                unlimited: false,
+                duration: 10,
+                recharge: 10
+            },
+            {
+                name: "Temp drop",
+                cost: 85,
+                effect: "−40°C instantly",
+                type: "instant",
+                amount: 40
+            },
+            {
+                name: "Air con",
+                cost: 105,
+                effect: "−21°C/s",
+                type: "rate",
+                cooling: 21,
+                unlimited: false,
+                duration: 10,
+                recharge: 12
+            },
+            {
+                name: "Freezer",
+                cost: 130,
+                effect: "−30°C/s",
+                type: "rate",
+                cooling: 30,
+                unlimited: false,
+                duration: 10,
+                recharge: 15
+            },
+            {
+                name: "Ice age",
+                cost: 160,
+                effect: "completely freezes the cube",
+                type: "win"
+            }
+        ];
+
+        const purchased = [];
+        const brokenItems = new Set();
+        const itemTimers = {};
+
+        let activeCoolingItem = null;
+
+        function createShop() {
+            items.forEach((item, index) => {
+                const div = document.createElement("div");
+
+                div.className = "item";
+                div.id = "item-" + index;
+
+                div.innerHTML = `
+                    <div class="item-top">
+                        <div class="item-name">${index + 1}. ${item.name}</div>
+                        <div class="item-cost">${item.cost} pts</div>
+                    </div>
+
+                    <div class="item-effect">
+                        effectiveness: ${item.effect}
+                    </div>
+
+                    <button class="buy" id="buy-${index}">
+                        buy
+                    </button>
+                `;
+
+                div.querySelector(".buy").addEventListener("click", () => {
+                    handleItemButton(index);
+                });
+
+                itemsContainer.appendChild(div);
+            });
+
+            updateShop();
+        }
+
+        function isElectricItem(index) {
+            const item = items[index];
+
+            return item &&
+                item.type === "rate" &&
+                ![0, 1].includes(index);
+        }
+
+        function getCoolingRate() {
+            if (activeCoolingItem === null) {
+                return 0;
+            }
+
+            if (brokenItems.has(activeCoolingItem)) {
+                return 0;
+            }
+
+            const item = items[activeCoolingItem];
+
+            if (!item || item.type !== "rate") {
+                return 0;
+            }
+
+            if (powerCutTimer > 0 && isElectricItem(activeCoolingItem)) {
+                return 0;
+            }
+
+            if (item.unlimited) {
+                return item.cooling;
+            }
+
+            const timer = itemTimers[activeCoolingItem];
+
+            if (!timer || timer.running <= 0) {
+                return 0;
+            }
+
+            return item.cooling;
+        }
+
+        function changeTemperaturePercent(percent) {
+            const temperatureRange = temperature + 100;
+            const change = temperatureRange * (percent / 100);
+
+            temperature += change;
+
+            temperature = Math.max(-150, Math.min(0, temperature));
+        }
+
+        function buyItem(index) {
+            const item = items[index];
+
+            if (brokenItems.has(index)) {
+                return;
+            }
+
+            if (purchased.includes(index)) {
+                return;
+            }
+
+            if (icePoints < item.cost) {
+                return;
+            }
+
+            icePoints -= item.cost;
+            purchased.push(index);
+
+            if (item.type === "rate") {
+                if (item.unlimited) {
+                    if (activeCoolingItem === null) {
+                        activeCoolingItem = index;
+                    }
+                } else {
+                    itemTimers[index] = {
+                        running: item.duration,
+                        recharging: false,
+                        recharge: 0
+                    };
+
+                    if (activeCoolingItem === null) {
+                        activeCoolingItem = index;
+                    }
+                }
+            }
+
+            if (item.type === "instant") {
+                temperature -= item.amount;
+                temperature = Math.max(-150, temperature);
+            }
+
+            if (item.type === "win") {
+                gameOver = true;
+                winOverlay.style.display = "flex";
+                updateEverything();
+                return;
+            }
+
+            updateEverything();
+            updateShop();
+        }
+
+        function switchCoolingItem(index) {
+            if (!purchased.includes(index)) {
+                return;
+            }
+
+            if (brokenItems.has(index)) {
+                return;
+            }
+
+            const item = items[index];
+
+            if (item.type !== "rate") {
+                return;
+            }
+
+            if (!item.unlimited) {
+                const timer = itemTimers[index];
+
+                if (!timer || timer.recharging || timer.running <= 0) {
+                    return;
+                }
+            }
+
+            activeCoolingItem = index;
+
+            updateEverything();
+            updateShop();
+        }
+
+        function handleItemButton(index) {
+            const item = items[index];
+
+            if (brokenItems.has(index)) {
+                return;
+            }
+
+            if (!purchased.includes(index)) {
+                buyItem(index);
+                return;
+            }
+
+            if (item.type === "rate") {
+                if (activeCoolingItem === index) {
+                    return;
+                }
+
+                switchCoolingItem(index);
+            }
+        }
+
+        function updateTimers(delta) {
+            items.forEach((item, index) => {
+                if (item.type !== "rate") {
+                    return;
+                }
+
+                if (item.unlimited) {
+                    return;
+                }
+
+                if (!purchased.includes(index)) {
+                    return;
+                }
+
+                if (brokenItems.has(index)) {
+                    return;
+                }
+
+                const timer = itemTimers[index];
+
+                if (!timer) {
+                    return;
+                }
+
+                if (timer.recharging) {
+                    timer.recharge -= delta;
+
+                    if (timer.recharge <= 0) {
+                        timer.recharge = 0;
+                        timer.recharging = false;
+                        timer.running = item.duration;
+                    }
+
+                    return;
+                }
+
+                if (activeCoolingItem === index) {
+                    timer.running -= delta;
+
+                    if (timer.running <= 0) {
+                        timer.running = 0;
+                        timer.recharging = true;
+                        timer.recharge = item.recharge;
+
+                        if (index === 2) {
+                            motorUses++;
+
+                            if (motorUses >= 2) {
+                                breakItem(
+                                    2,
+                                    "Fan overload! The motor fan ran too hard and broke."
+                                );
+                            }
+                        }
+
+                        if (activeCoolingItem === index) {
+                            activeCoolingItem = findAvailableCoolingItem(index);
+                        }
+                    }
+                }
+            });
+        }
+
+        function findAvailableCoolingItem(excludeIndex = null) {
+            for (let i = purchased.length - 1; i >= 0; i--) {
+                const index = purchased[i];
+
+                if (index === excludeIndex) {
+                    continue;
+                }
+
+                if (brokenItems.has(index)) {
+                    continue;
+                }
+
+                const item = items[index];
+
+                if (item.type !== "rate") {
+                    continue;
+                }
+
+                if (item.unlimited) {
+                    return index;
+                }
+
+                const timer = itemTimers[index];
+
+                if (
+                    timer &&
+                    !timer.recharging &&
+                    timer.running > 0
+                ) {
+                    return index;
+                }
+            }
+
+            return null;
+        }
+
+        function breakItem(index, message) {
+            if (brokenItems.has(index)) {
+                return;
+            }
+
+            brokenItems.add(index);
+
+            if (activeCoolingItem === index) {
+                activeCoolingItem = findAvailableCoolingItem(index);
+            }
+
+            showEvent(message, "danger");
+            updateShop();
+            updateEverything();
+        }
+
+        function loseAllEquipment() {
+            purchased.forEach(index => {
+                brokenItems.add(index);
+            });
+
+            activeCoolingItem = null;
+
+            Object.keys(itemTimers).forEach(key => {
+                delete itemTimers[key];
+            });
+
+            showEvent(
+                "The robot stole all your equipment! Temperature rose by 100%.",
+                "danger"
+            );
+
+            changeTemperaturePercent(100);
+
+            updateShop();
+            updateEverything();
+        }
+
+        function updateShop() {
+            items.forEach((item, index) => {
+                const itemEl = document.getElementById("item-" + index);
+                const button = document.getElementById("buy-" + index);
+
+                const bought = purchased.includes(index);
+                const broken = brokenItems.has(index);
+
+                itemEl.classList.toggle("bought", bought && !broken);
+                itemEl.classList.toggle("broken", broken);
+
+                if (broken) {
+                    button.textContent = "broken";
+                    button.disabled = true;
+                    return;
+                }
+
+                if (!bought) {
+                    if (icePoints >= item.cost) {
+                        button.disabled = false;
+                        button.textContent = "buy";
+                    } else {
+                        button.disabled = true;
+                        button.textContent =
+                            "need " +
+                            Math.ceil(item.cost - icePoints) +
+                            " more points";
+                    }
+
+                    return;
+                }
+
+                if (item.type === "instant") {
+                    button.textContent = "owned";
+                    button.disabled = true;
+                    return;
+                }
+
+                if (item.type === "win") {
+                    button.textContent = "WIN";
+                    button.disabled = false;
+                    return;
+                }
+
+                if (item.unlimited) {
+                    if (activeCoolingItem === index) {
+                        button.textContent = "using";
+                        button.disabled = true;
+                    } else {
+                        button.textContent = "switch to using this";
+                        button.disabled = false;
+                    }
+
+                    return;
+                }
+
+                const timer = itemTimers[index];
+
+                if (!timer) {
+                    button.textContent = "ready";
+                    button.disabled = false;
+                    return;
+                }
+
+                if (timer.recharging) {
+                    button.textContent =
+                        "recharging " +
+                        timer.recharge.toFixed(1) +
+                        "s";
+
+                    button.disabled = true;
+                    return;
+                }
+
+                if (activeCoolingItem === index) {
+                    button.textContent =
+                        "using " +
+                        timer.running.toFixed(1) +
+                        "s";
+
+                    button.disabled = true;
+                } else {
+                    button.textContent = "switch to using this";
+                    button.disabled = false;
+                }
+            });
+
+            itemsBoughtEl.textContent =
+                purchased.filter(index => !brokenItems.has(index)).length + "/10";
+        }
+
+        function updateEverything() {
+            let cooling = getCoolingRate();
+
+            if (rainTimer > 0) {
+                cooling *= 0.75;
+            }
+
+            let actualRate = BASE_WARMING - cooling;
+
+            if (iceCrackTimer > 0) {
+                actualRate *= 1.25;
+            }
+
+            temperatureEl.textContent =
+                Math.round(temperature) + "°C";
+
+            if (actualRate > 0) {
+                warmingRateEl.textContent =
+                    "+" + actualRate.toFixed(1) + "°C/s";
+            } else if (actualRate < 0) {
+                warmingRateEl.textContent =
+                    actualRate.toFixed(1) + "°C/s";
+            } else {
+                warmingRateEl.textContent =
+                    "0°C/s";
+            }
+
+            timeEl.textContent =
+                survivalTime.toFixed(1);
+
+            let fill =
+                ((temperature + 100) / 100) * 100;
+
+            fill = Math.max(
+                0,
+                Math.min(100, fill)
+            );
+
+            temperatureFill.style.width =
+                fill + "%";
+
+            if (temperature < -70) {
+                temperatureEl.style.color = "#1877D2";
+            } else if (temperature < -40) {
+                temperatureEl.style.color = "#4AA9FF";
+            } else if (temperature < -15) {
+                temperatureEl.style.color = "#F0A52B";
+            } else {
+                temperatureEl.style.color = "#FF4F4F";
+            }
+
+            const meltAmount =
+                Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        (temperature + 100) / 100
+                    )
+                );
+
+            const size =
+                220 - meltAmount * 70;
+
+            const height =
+                260 - meltAmount * 90;
+
+            ice.style.width =
+                size + "px";
+
+            ice.style.height =
+                height + "px";
+
+            ice.style.borderRadius =
+                (38 - meltAmount * 15) + "px " +
+                (45 - meltAmount * 15) + "px " +
+                (32 - meltAmount * 10) + "px " +
+                (42 - meltAmount * 15) + "px";
+
+            ice.classList.toggle("unstable", rainTimer > 0);
+            ice.classList.toggle("cracked", iceCrackTimer > 0);
+
+            if (iceCrackTimer > 0) {
+                statusEl.textContent = "ICE CRACKED - warming faster";
+            } else if (powerCutTimer > 0) {
+                statusEl.textContent = "POWER CUT - electric equipment offline";
+            } else if (coldWindTimer > 0) {
+                statusEl.textContent = "freezing wind";
+            } else if (rainTimer > 0) {
+                statusEl.textContent = "slippery and unstable";
+            } else if (temperature < -50) {
+                statusEl.textContent = "nice and frozen";
+            } else if (temperature < -20) {
+                statusEl.textContent = "starting to warm up";
+            } else if (temperature < 0) {
+                statusEl.textContent = "DANGER: almost melting";
+            }
+
+            updateShop();
+        }
+
+        function showEvent(message, type = "") {
+            eventNotice.textContent = message;
+            eventNotice.className = "active " + type;
+
+            clearTimeout(showEvent.timeout);
+
+            showEvent.timeout = setTimeout(() => {
+                eventNotice.className = "";
+            }, 3500);
+        }
+
+        function startWarning(event) {
+            pendingEvent = event;
+            eventWarningTimer = 3;
+
+            showEvent(
+                event.warning + "  Get ready! " +
+                eventWarningTimer.toFixed(0) +
+                "s",
+                "warning"
+            );
+        }
+
+        function executeEvent(event) {
+            pendingEvent = null;
+
+            event.action();
+
+            eventCooldown = 12 + Math.random() * 8;
+            nextEventTime = survivalTime + 15 + Math.random() * 20;
+        }
+
+        const events = [
+            {
+                id: "motorOverload",
+                warning: "The motor fan is shaking violently!",
+                requires: () => purchased.includes(2) && !brokenItems.has(2),
+                action: () => {
+                    breakItem(
+                        2,
+                        "Fan overload! The motor fan ran too hard and broke."
+                    );
+                }
+            },
+            {
+                id: "handFanCable",
+                warning: "The hand-held fan cable is looking dangerously loose!",
+                requires: () => purchased.includes(1) && !brokenItems.has(1),
+                action: () => {
+                    breakItem(
+                        1,
+                        "Fan cable snapped! Your hand-held fan is permanently lost."
+                    );
+                }
+            },
+            {
+                id: "robot",
+                warning: "Something mechanical is approaching your equipment...",
+                requires: () => purchased.length > 0,
+                action: () => {
+                    loseAllEquipment();
+                }
+            },
+            {
+                id: "heatwave",
+                warning: "The air suddenly feels much hotter...",
+                requires: () => true,
+                action: () => {
+                    changeTemperaturePercent(35);
+
+                    showEvent(
+                        "Heatwave! Temperature rose by 35%.",
+                        "danger"
+                    );
+                }
+            },
+            {
+                id: "snowfall",
+                warning: "Snow clouds are forming above the cube...",
+                requires: () => true,
+                action: () => {
+                    changeTemperaturePercent(-40);
+
+                    showEvent(
+                        "Lucky snowfall! Temperature dropped by 40%.",
+                        "good"
+                    );
+                }
+            },
+            {
+                id: "coldWind",
+                warning: "A freezing gust is coming!",
+                requires: () => true,
+                action: () => {
+                    changeTemperaturePercent(-20);
+
+                    coldWindTimer = 8;
+
+                    showEvent(
+                        "Cold wind! Temperature dropped by 20% and freezing wind lasts for 8 seconds.",
+                        "good"
+                    );
+                }
+            },
+            {
+                id: "radiator",
+                warning: "You hear a radiator clicking on nearby...",
+                requires: () => true,
+                action: () => {
+                    changeTemperaturePercent(25);
+
+                    showEvent(
+                        "Radiator turned on! Temperature rose by 25%.",
+                        "danger"
+                    );
+                }
+            },
+            {
+                id: "cow",
+                warning: "You hear hooves getting closer...",
+                requires: () => true,
+                action: () => {
+                    changeTemperaturePercent(-15);
+
+                    showEvent(
+                        "A cow walked past and knocked ice onto the cube! Temperature dropped by 15%.",
+                        "good"
+                    );
+                }
+            },
+            {
+                id: "powerCut",
+                warning: "The lights are flickering...",
+                requires: () =>
+                    purchased.some(
+                        index =>
+                            isElectricItem(index) &&
+                            !brokenItems.has(index)
+                    ),
+                action: () => {
+                    powerCutTimer = 8;
+
+                    showEvent(
+                        "Power cut! Electric equipment disabled for 8 seconds.",
+                        "danger"
+                    );
+                }
+            },
+            {
+                id: "iceCrack",
+                warning: "You hear a worrying crack from inside the cube...",
+                requires: () => true,
+                action: () => {
+                    iceCrackTimer = 15;
+
+                    showEvent(
+                        "Ice crack! The cube warms 25% faster for 15 seconds.",
+                        "danger"
+                    );
+                }
+            },
+            {
+                id: "rain",
+                warning: "Dark clouds are forming...",
+                requires: () => true,
+                action: () => {
+                    changeTemperaturePercent(-10);
+
+                    rainTimer = 8;
+
+                    showEvent(
+                        "Rain! Temperature dropped by 10%, but the cube is slippery and unstable.",
+                        "good"
+                    );
+                }
+            },
+            {
+                id: "balloon",
+                warning: "A balloon is drifting directly toward your fan...",
+                requires: () => activeCoolingItem !== null,
+                action: () => {
+                    const fan = activeCoolingItem;
+
+                    if (fan !== null) {
+                        if (items[fan].unlimited) {
+                            if (fan !== 0) {
+                                itemTimers[fan] = itemTimers[fan] || {};
+                                itemTimers[fan].balloonTimer = 5;
+                            }
+                        } else if (itemTimers[fan]) {
+                            itemTimers[fan].balloonTimer = 5;
+                        }
+                    }
+
+                    showEvent(
+                        "Balloon hit the fan! Your current fan stopped for 5 seconds.",
+                        "danger"
+                    );
+                }
+            },
+            {
+                id: "hotBreath",
+                warning: "Someone is getting very close to the cube...",
+                requires: () => true,
+                action: () => {
+                    changeTemperaturePercent(15);
+
+                    showEvent(
+                        "Hot breath! Temperature rose by 15%.",
+                        "danger"
+                    );
+                }
+            },
+            {
+                id: "perfectFreeze",
+                warning: "The air around the cube suddenly becomes unbelievably cold...",
+                requires: () => true,
+                action: () => {
+                    changeTemperaturePercent(-75);
+
+                    showEvent(
+                        "PERFECT FREEZE! Temperature dropped by 75%.",
+                        "good"
+                    );
+                }
+            },
+            {
+                id: "taxMan",
+                warning: "The Tax Man is approaching your ice cube...",
+                requires: () =>
+                    survivalTime >= 20 &&
+                    icePoints > 0,
+                action: () => {
+                    const tax =
+                        Math.max(
+                            1,
+                            Math.floor(icePoints * 0.15)
+                        );
+
+                    icePoints =
+                        Math.max(
+                            0,
+                            icePoints - tax
+                        );
+
+                    showEvent(
+                        "Tax Man! He took " +
+                        tax +
+                        " points from your savings.",
+                        "danger"
+                    );
+                }
+            },
+            {
+                id: "mouse",
+                warning: "You hear something chewing near the cables...",
+                requires: () =>
+                    purchased.some(
+                        index =>
+                            isElectricItem(index) &&
+                            !brokenItems.has(index)
+                    ),
+                action: () => {
+                    const electric =
+                        purchased.filter(
+                            index =>
+                                isElectricItem(index) &&
+                                !brokenItems.has(index)
+                        );
+
+                    if (electric.length > 0) {
+                        const target =
+                            electric[
+                            Math.floor(
+                                Math.random() *
+                                electric.length
+                            )
+                            ];
+
+                        breakItem(
+                            target,
+                            "Mouse attack! The mouse chewed through your " +
+                            items[target].name +
+                            " cable."
+                        );
+                    }
+                }
+            }
+        ];
+
+        function chooseRandomEvent() {
+            const available =
+                events.filter(event => {
+                    if (!event.requires()) {
+                        return false;
+                    }
+
+                    if (event.id === "motorOverload") {
+                        return false;
+                    }
+
+                    return true;
+                });
+
+            if (available.length === 0) {
+                return;
+            }
+
+            const event =
+                available[
+                Math.floor(
+                    Math.random() *
+                    available.length
+                )
+                ];
+
+            startWarning(event);
+        }
+
+        function updateEventSystem(delta) {
+            if (eventCooldown > 0) {
+                eventCooldown -= delta;
+            }
+
+            if (pendingEvent) {
+                eventWarningTimer -= delta;
+
+                showEvent(
+                    pendingEvent.warning +
+                    "  " +
+                    Math.max(
+                        0,
+                        eventWarningTimer
+                    ).toFixed(1) +
+                    "s",
+                    "warning"
+                );
+
+                if (eventWarningTimer <= 0) {
+                    executeEvent(pendingEvent);
+                }
+
+                return;
+            }
+
+            if (
+                survivalTime >= nextEventTime &&
+                eventCooldown <= 0
+            ) {
+                chooseRandomEvent();
+            }
+        }
+
+        function updateSpecialTimers(delta) {
+            if (coldWindTimer > 0) {
+                coldWindTimer -= delta;
+
+                if (coldWindTimer <= 0) {
+                    coldWindTimer = 0;
+
+                    showEvent(
+                        "The cold wind has passed.",
+                        "good"
+                    );
+                }
+            }
+
+            if (powerCutTimer > 0) {
+                powerCutTimer -= delta;
+
+                if (powerCutTimer <= 0) {
+                    powerCutTimer = 0;
+
+                    showEvent(
+                        "Power restored! Electric equipment is working again.",
+                        "good"
+                    );
+                }
+            }
+
+            if (iceCrackTimer > 0) {
+                iceCrackTimer -= delta;
+
+                if (iceCrackTimer <= 0) {
+                    iceCrackTimer = 0;
+
+                    showEvent(
+                        "The ice crack has stopped spreading.",
+                        "good"
+                    );
+                }
+            }
+
+            if (rainTimer > 0) {
+                rainTimer -= delta;
+
+                if (rainTimer <= 0) {
+                    rainTimer = 0;
+
+                    showEvent(
+                        "The rain has stopped.",
+                        "good"
+                    );
+                }
+            }
+
+            Object.keys(itemTimers).forEach(key => {
+                const timer = itemTimers[key];
+
+                if (
+                    timer &&
+                    timer.balloonTimer > 0
+                ) {
+                    timer.balloonTimer -= delta;
+
+                    if (timer.balloonTimer <= 0) {
+                        timer.balloonTimer = 0;
+
+                        showEvent(
+                            "The balloon came loose from the fan.",
+                            "good"
+                        );
+                    }
+                }
+            });
+        }
+
+        function getEffectiveCoolingRate() {
+            let cooling = getCoolingRate();
+
+            if (activeCoolingItem !== null) {
+                const timer =
+                    itemTimers[activeCoolingItem];
+
+                if (
+                    timer &&
+                    timer.balloonTimer > 0
+                ) {
+                    cooling = 0;
+                }
+            }
+
+            if (rainTimer > 0) {
+                cooling *= 0.75;
+            }
+
+            return cooling;
+        }
+
+        function melt() {
+            if (
+                meltOverlay.style.display === "flex"
+            ) {
+                return;
+            }
+
+            meltText.textContent =
+                "You kept the ice cube alive for " +
+                survivalTime.toFixed(1) +
+                " seconds and bought " +
+                purchased.filter(
+                    index =>
+                        !brokenItems.has(index)
+                ).length +
+                " working upgrade" +
+                (
+                    purchased.filter(
+                        index =>
+                            !brokenItems.has(index)
+                    ).length === 1
+                        ? ""
+                        : "s"
+                ) +
+                ".";
+
+            meltOverlay.style.display = "flex";
+
+            gameOver = true;
+        }
+
+        continueButton.addEventListener(
+            "click",
+            () => {
+                meltOverlay.style.display = "none";
+
+                purchased.length = 0;
+
+                brokenItems.clear();
+
+                Object.keys(itemTimers).forEach(
+                    key => {
+                        delete itemTimers[key];
+                    }
+                );
+
+                activeCoolingItem = null;
+
+                temperature =
+                    STARTING_TEMPERATURE;
+
+                survivalTime = 0;
+
+                icePoints = 0;
+
+                coldWindTimer = 0;
+                powerCutTimer = 0;
+                iceCrackTimer = 0;
+                rainTimer = 0;
+
+                pendingEvent = null;
+                eventWarningTimer = 0;
+                eventCooldown = 0;
+
+                nextEventTime =
+                    15 + Math.random() * 10;
+
+                motorUses = 0;
+
+                eventNotice.className = "";
+
+                gameOver = false;
+
+                lastTime =
+                    performance.now();
+
+                updateEverything();
+
+                requestAnimationFrame(
+                    gameLoop
+                );
+            }
+        );
+
+        function gameLoop(now) {
+            if (gameOver) {
+                return;
+            }
+
+            const delta =
+                Math.min(
+                    (now - lastTime) / 1000,
+                    0.1
+                );
+
+            lastTime = now;
+
+            survivalTime += delta;
+
+            icePoints += delta;
+
+            updateTimers(delta);
+
+            updateSpecialTimers(delta);
+
+            updateEventSystem(delta);
+
+            const cooling =
+                getEffectiveCoolingRate();
+
+            let actualRate =
+                BASE_WARMING - cooling;
+
+            if (iceCrackTimer > 0) {
+                actualRate *= 1.25;
+            }
+
+            temperature +=
+                actualRate * delta;
+
+            if (temperature >= 0) {
+                temperature = 0;
+
+                updateEverything();
+
+                melt();
+
+                return;
+            }
+
+            updateEverything();
+
+            requestAnimationFrame(
+                gameLoop
+            );
+        }
+
+        createShop();
+
+        updateEverything();
+
+        requestAnimationFrame(
+            gameLoop
+        );
+    </script>
+
+</body>
+
+</html>

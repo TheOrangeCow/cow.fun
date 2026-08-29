@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Tennis - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+<style>
+    :root {
+        --bg: #FDFCF6;
+        --ink: #17161A;
+        --ink-soft: #4A4850;
+        --orange: #FF6B2C;
+        --pink: #FF4FA0;
+        --line: rgba(23, 22, 26, 0.14);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px clamp(16px, 4vw, 48px);
+    }
+
+    a.back {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 13px;
+        color: var(--ink-soft);
+        text-decoration: none;
+        border: 1px solid var(--line);
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #fff;
+    }
+
+    a.back:hover {
+        color: var(--ink);
+        border-color: var(--ink);
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .score-tag {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 13px;
+        background: var(--ink);
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 999px;
+    }
+
+    #handToggle {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 13px;
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        padding: 6px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+
+    #handToggle:hover {
+        border-color: var(--ink);
+    }
+
+    #handToggle.active {
+        background: var(--orange);
+        color: #fff;
+        border-color: var(--orange);
+    }
+
+    .title-block {
+        text-align: center;
+        padding: 6px 20px 10px;
+    }
+
+    h1 {
+        font-family: 'Fredoka', sans-serif;
+        font-weight: 600;
+        font-size: clamp(28px, 5vw, 44px);
+        margin: 0 0 6px;
+        letter-spacing: -0.5px;
+    }
+
+    .caption {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 14px;
+        color: var(--ink-soft);
+        min-height: 20px;
+        transition: opacity .15s ease;
+    }
+
+    #arena {
+        position: relative;
+        flex: 1;
+        margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+        border: 2px dashed var(--line);
+        border-radius: 24px;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+            radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+        min-height: 420px;
+    }
+
+    #gameCanvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    #camera {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #handStatus {
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 12px;
+        background: #fff;
+        border: 1px solid var(--line);
+        padding: 6px 12px;
+        border-radius: 999px;
+        z-index: 10;
+        white-space: nowrap;
+    }
+
+    #startButton {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-family: 'Fredoka', sans-serif;
+        font-weight: 600;
+        border: none;
+        border-radius: 16px;
+        color: #fff;
+        background: var(--orange);
+        box-shadow: 0 6px 0 var(--ink);
+        cursor: pointer;
+        padding: 14px 24px;
+        font-size: 18px;
+        z-index: 20;
+    }
+
+    #startButton:active {
+        box-shadow: 0 2px 0 var(--ink);
+        transform: translate(-50%, calc(-50% + 4px));
+    }
+
+    #message {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-family: 'Fredoka', sans-serif;
+        font-size: clamp(25px, 5vw, 42px);
+        font-weight: 600;
+        text-align: center;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity .2s ease;
+        z-index: 15;
+    }
+
+    #winOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(23, 22, 26, 0.9);
+        color: #fff;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        z-index: 50;
+        padding: 20px;
+    }
+
+    #winOverlay h2 {
+        font-family: 'Fredoka', sans-serif;
+        font-size: clamp(30px, 6vw, 52px);
+        margin: 0 0 14px;
+    }
+
+    #winOverlay p {
+        font-family: 'IBM Plex Mono', monospace;
+        max-width: 420px;
+        color: #ddd;
+        margin: 0 0 24px;
+    }
+
+    #winOverlay button {
+        font-family: 'IBM Plex Mono', monospace;
+        background: var(--orange);
+        color: #fff;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    @media (max-width: 650px) {
+        header {
+            padding: 14px 12px;
+        }
+
+        .header-right {
+            gap: 5px;
+        }
+
+        #handToggle,
+        .score-tag {
+            font-size: 11px;
+            padding: 6px 9px;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+
+<header>
+    <a class="back" href="index.html">← cow.fun</a>
+
+    <div class="header-right">
+        <button id="handToggle">show hand: off</button>
+        <div class="score-tag">score: <span id="score">0</span></div>
+    </div>
+</header>
+
+<div class="title-block">
+    <h1>Table Tennis</h1>
+    <div class="caption" id="caption">move your hand to control the paddle.</div>
+</div>
+
+<div id="arena">
+    <video id="camera" autoplay playsinline></video>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="handStatus">camera not started</div>
+
+    <button id="startButton">start game</button>
+
+    <div id="message"></div>
+</div>
+
+<div id="winOverlay">
+    <h2>you beat the cow.</h2>
+    <p>You scored 10 points. Your hand is officially better at table tennis than the cow expected.</p>
+    <button onclick="location.reload()">go again</button>
+</div>
+
+<script type="module">
+    import {
+        HandLandmarker,
+        FilesetResolver
+    } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/vision_bundle.mjs";
+
+    const arena = document.getElementById("arena");
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const video = document.getElementById("camera");
+    const startButton = document.getElementById("startButton");
+    const handStatus = document.getElementById("handStatus");
+    const scoreEl = document.getElementById("score");
+    const captionEl = document.getElementById("caption");
+    const winOverlay = document.getElementById("winOverlay");
+    const message = document.getElementById("message");
+    const handToggle = document.getElementById("handToggle");
+
+    let handLandmarker;
+    let cameraStarted = false;
+    let lastVideoTime = -1;
+
+    let showHand = false;
+    let currentHandLandmarks = null;
+
+    let score = 0;
+    let opponentScore = 0;
+
+    let playerY = 0.5;
+    let targetPlayerY = 0.5;
+
+    let ball = {
+        x: 0.5,
+        y: 0.5,
+        vx: -0.55,
+        vy: 0.16,
+        size: 9
+    };
+
+    let playerPaddle = {
+        x: 0.035,
+        y: 0.5,
+        width: 0.025,
+        height: 0.19
+    };
+
+    let opponentPaddle = {
+        x: 0.94,
+        y: 0.5,
+        width: 0.025,
+        height: 0.19
+    };
+
+    let gameRunning = false;
+    
+    let lastTime = performance.now();
+
+    const captions = [
+        "move your hand to control the paddle.",
+        "watch the ball.",
+        "nice return.",
+        "the cow is getting nervous.",
+        "keep your hand moving.",
+        "that was close.",
+        "you're getting good at this.",
+        "the cow did not expect that.",
+        "faster.",
+        "one more point.",
+        "match point."
+    ];
+
+    const handConnections = [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 4],
+
+        [0, 5],
+        [5, 6],
+        [6, 7],
+        [7, 8],
+
+        [0, 17],
+        [17, 18],
+        [18, 19],
+        [19, 20],
+
+        [5, 9],
+        [9, 10],
+        [10, 11],
+        [11, 12],
+
+        [9, 13],
+        [13, 14],
+        [14, 15],
+        [15, 16]
+    ];
+
+    function resizeCanvas() {
+        const rect = arena.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+
+        canvas.style.width = rect.width + "px";
+        canvas.style.height = rect.height + "px";
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function showMessage(text) {
+        message.textContent = text;
+        message.style.opacity = "1";
+
+        setTimeout(() => {
+            message.style.opacity = "0";
+        }, 700);
+    }
+
+    function updateCaption() {
+        captionEl.textContent =
+            captions[Math.min(score, captions.length - 1)];
+    }
+
+    function resetBall(direction = -1) {
+        ball.x = 0.5;
+        ball.y = 0.5;
+
+        const speed = 0.55 + score * 0.018;
+
+        ball.vx = direction * speed;
+        ball.vy = (Math.random() * 0.45) - 0.225;
+    }
+
+    function scorePoint(player) {
+        if (player) {
+            score++;
+            scoreEl.textContent = score;
+
+            updateCaption();
+            showMessage("+1");
+
+            if (score >= 10) {
+                gameRunning = false;
+
+                setTimeout(() => {
+                    winOverlay.style.display = "flex";
+                }, 600);
+
+                return;
+            }
+
+            resetBall(-1);
+        } else {
+            opponentScore++;
+            showMessage("missed");
+
+            resetBall(1);
+        }
+    }
+
+    function paddleCollision(paddle, isPlayer) {
+        const paddleLeft = paddle.x;
+        const paddleRight = paddle.x + paddle.width;
+
+        const paddleTop = paddle.y - paddle.height / 2;
+        const paddleBottom = paddle.y + paddle.height / 2;
+
+        const ballLeft = ball.x - ball.size / 1000;
+        const ballRight = ball.x + ball.size / 1000;
+        const ballTop = ball.y - ball.size / 1000;
+        const ballBottom = ball.y + ball.size / 1000;
+
+        if (
+            ballRight >= paddleLeft &&
+            ballLeft <= paddleRight &&
+            ballBottom >= paddleTop &&
+            ballTop <= paddleBottom
+        ) {
+            if (isPlayer && ball.vx < 0) {
+                ball.x = paddleRight + 0.01;
+
+                ball.vx = Math.abs(ball.vx) * 1.045;
+
+                const hit =
+                    (ball.y - paddle.y) /
+                    (paddle.height / 2);
+
+                ball.vy = hit * 0.48;
+
+                scoreEl.textContent = score;
+            }
+
+            if (!isPlayer && ball.vx > 0) {
+                ball.x = paddleLeft - 0.01;
+
+                ball.vx = -Math.abs(ball.vx) * 1.025;
+
+                const hit =
+                    (ball.y - paddle.y) /
+                    (paddle.height / 2);
+
+                ball.vy = hit * 0.48;
+            }
+        }
+    }
+
+    function updateOpponent(dt) {
+        const target = ball.y;
+
+        const difference = target - opponentPaddle.y;
+
+        opponentPaddle.y +=
+            difference * Math.min(1, dt * (1.8 + score * 0.08));
+
+        opponentPaddle.y = Math.max(
+            opponentPaddle.height / 2,
+            Math.min(
+                1 - opponentPaddle.height / 2,
+                opponentPaddle.y
+            )
+        );
+    }
+
+    function updateGame(dt) {
+        if (!gameRunning) return;
+
+        playerY +=
+            (targetPlayerY - playerY) *
+            Math.min(1, dt * 12);
+
+        playerPaddle.y = playerY;
+
+        ball.x += ball.vx * dt;
+        ball.y += ball.vy * dt;
+
+        if (
+            ball.y <= 0.025 ||
+            ball.y >= 0.975
+        ) {
+            ball.y = Math.max(
+                0.025,
+                Math.min(0.975, ball.y)
+            );
+
+            ball.vy *= -1;
+        }
+
+        paddleCollision(playerPaddle, true);
+        paddleCollision(opponentPaddle, false);
+
+        updateOpponent(dt);
+
+        if (ball.x < -0.03) {
+            scorePoint(false);
+        }
+
+        if (ball.x > 1.03) {
+            scorePoint(true);
+        }
+    }
+
+    function drawRoundedRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        ctx.fill();
+    }
+
+    function drawHand() {
+        if (!showHand || !currentHandLandmarks) return;
+
+        const rect = arena.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+
+        const landmarks = currentHandLandmarks;
+
+        ctx.save();
+
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#FF6B2C";
+
+        for (const [a, b] of handConnections) {
+            const pointA = landmarks[a];
+            const pointB = landmarks[b];
+
+            if (!pointA || !pointB) continue;
+
+            const ax = (1 - pointA.x) * w;
+            const ay = pointA.y * h;
+
+            const bx = (1 - pointB.x) * w;
+            const by = pointB.y * h;
+
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(bx, by);
+            ctx.stroke();
+        }
+
+        for (let i = 0; i < landmarks.length; i++) {
+            const point = landmarks[i];
+
+            const x = (1 - point.x) * w;
+            const y = point.y * h;
+
+            ctx.beginPath();
+            ctx.arc(
+                x,
+                y,
+                i === 8 ? 8 : 5,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fillStyle =
+                i === 8 ? "#FF4FA0" : "#17161A";
+
+            ctx.fill();
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#fff";
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    function drawGame() {
+        const rect = arena.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.setLineDash([7, 9]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(23,22,26,0.14)";
+
+        ctx.beginPath();
+        ctx.moveTo(w / 2, 25);
+        ctx.lineTo(w / 2, h - 25);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(
+            w / 2,
+            h / 2,
+            Math.min(w, h) * 0.12,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.strokeStyle = "rgba(23,22,26,0.10)";
+        ctx.stroke();
+
+        const px = playerPaddle.x * w;
+        const py = playerPaddle.y * h;
+        const pw = playerPaddle.width * w;
+        const ph = playerPaddle.height * h;
+
+        ctx.fillStyle = "#FF6B2C";
+
+        drawRoundedRect(
+            px,
+            py - ph / 2,
+            pw,
+            ph,
+            10
+        );
+
+        ctx.fillStyle = "#17161A";
+
+        const ox = opponentPaddle.x * w;
+        const oy = opponentPaddle.y * h;
+        const ow = opponentPaddle.width * w;
+        const oh = opponentPaddle.height * h;
+
+        drawRoundedRect(
+            ox,
+            oy - oh / 2,
+            ow,
+            oh,
+            10
+        );
+
+        const bx = ball.x * w;
+        const by = ball.y * h;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            bx,
+            by,
+            ball.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle = "#FF4FA0";
+        ctx.fill();
+
+        ctx.beginPath();
+
+        ctx.arc(
+            bx - 2,
+            by - 2,
+            2,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+
+        ctx.font = "600 13px 'IBM Plex Mono'";
+        ctx.textAlign = "center";
+
+        ctx.fillStyle = "rgba(23,22,26,0.45)";
+
+        ctx.fillText(
+            `${score}  -  ${opponentScore}`,
+            w / 2,
+            24
+        );
+
+        drawHand();
+    }
+
+    async function setupHandTracking() {
+        handStatus.textContent = "loading hand tracking...";
+
+        const vision = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm"
+        );
+
+        handLandmarker = await HandLandmarker.createFromOptions(
+            vision,
+            {
+                baseOptions: {
+                    modelAssetPath:
+                        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                    delegate: "GPU"
+                },
+                runningMode: "VIDEO",
+                numHands: 1,
+                minHandDetectionConfidence: 0.5,
+                minHandPresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            }
+        );
+
+        handStatus.textContent = "show your hand";
+    }
+
+    function detectHand() {
+        if (
+            !handLandmarker ||
+            !cameraStarted ||
+            video.readyState < 2
+        ) {
+            requestAnimationFrame(detectHand);
+            return;
+        }
+
+        if (video.currentTime !== lastVideoTime) {
+            lastVideoTime = video.currentTime;
+
+            const result =
+                handLandmarker.detectForVideo(
+                    video,
+                    performance.now()
+                );
+
+            if (
+                result.landmarks &&
+                result.landmarks.length > 0
+            ) {
+                const hand = result.landmarks[0];
+
+                currentHandLandmarks = hand;
+
+                const indexFinger = hand[8];
+
+                targetPlayerY = indexFinger.y;
+
+                targetPlayerY = Math.max(
+                    playerPaddle.height / 2,
+                    Math.min(
+                        1 - playerPaddle.height / 2,
+                        targetPlayerY
+                    )
+                );
+
+                handStatus.textContent =
+                    "hand detected";
+            } else {
+                currentHandLandmarks = null;
+
+                handStatus.textContent =
+                    "show your hand";
+            }
+        }
+
+        requestAnimationFrame(detectHand);
+    }
+
+    async function startCamera() {
+        try {
+            startButton.style.display = "none";
+
+            handStatus.textContent =
+                "starting camera...";
+
+            const stream =
+                await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "user",
+                        width: {
+                            ideal: 1280
+                        },
+                        height: {
+                            ideal: 720
+                        }
+                    },
+                    audio: false
+                });
+
+            video.srcObject = stream;
+
+            await video.play();
+
+            cameraStarted = true;
+
+            await setupHandTracking();
+
+            gameRunning = true;
+
+            resetBall(-1);
+
+            handStatus.textContent =
+                "hand detected";
+
+            detectHand();
+
+        } catch (error) {
+            console.error(error);
+
+            startButton.style.display = "block";
+
+            handStatus.textContent =
+                "camera permission required";
+
+            startButton.textContent =
+                "try again";
+        }
+    }
+
+    handToggle.addEventListener("click", () => {
+        showHand = !showHand;
+
+        handToggle.textContent =
+            showHand
+                ? "show hand: on"
+                : "show hand: off";
+
+        handToggle.classList.toggle(
+            "active",
+            showHand
+        );
+    });
+
+    startButton.addEventListener(
+        "click",
+        startCamera
+    );
+
+    function gameLoop(now) {
+        const dt =
+            Math.min(
+                0.033,
+                (now - lastTime) / 1000
+            );
+
+        lastTime = now;
+
+        updateGame(dt);
+        drawGame();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    resizeCanvas();
+
+    window.addEventListener(
+        "resize",
+        resizeCanvas
+    );
+
+    requestAnimationFrame(gameLoop);
+</script>
+
+
+</body>
+
+</html>
