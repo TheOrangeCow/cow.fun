@@ -159,6 +159,23 @@ def nerd():
 def cup():
     return render_template("cup.html")
 
+@app.route("/table")
+def table():
+    return render_template("table.html")
+
+@app.route("/ice")
+def ice():
+    return render_template("ice.html")
+
+@app.route("/fly")
+def fly():
+    return render_template("fly.html")
+
+@app.route("/draw")
+def draw():
+    return render_template("draw.html")
+
+
 # Home and error pages
 
 @app.route("/index.html")
