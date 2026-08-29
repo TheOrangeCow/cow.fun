@@ -465,7 +465,7 @@
                     <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
                 <input id="searchInput" type="text" placeholder="Search pointless games…" autocomplete="off">
-                <span class="search-count" id="searchCount">32 games</span>
+                <span class="search-count" id="searchcount">32 games</span>
             </div>
             <div class="search-hint"></div>
         </div>
@@ -495,7 +495,6 @@
     <script>
         const games = [
             { n: "01", cat: "Reflexes", title: "The Impossible Button", desc: "It really, really does not want to be clicked. Good luck.", href: "/button", color: "c1" },
-            //{ n: "02", cat: "Chaos", title: "Infinite Consequences", desc: "Every click creates another problem. It only gets worse.", href: "/canvas", color: "c2" },
             { n: "02", cat: "Strategy", title: "Blue Versus", desc: "Expand, survive and conquer the board before the reds overwhelm you.", href: "/conquest", color: "c2" },
             { n: "03", cat: "Forms", title: "Sign Up", desc: "Create an account for absolutely no reason whatsoever.", href: "/signup", color: "c3", popular: true},
             { n: "04", cat: "Patience", title: "cowOS Update", desc: "Install forty-seven completely unnecessary features and agree to suspicious terms.", href: "/update", color: "c4" },
@@ -507,7 +506,6 @@
             { n: "10", cat: "Arkade", title: "ekans", desc: "Your classic arkade game but just backwards.", href: "/ekans", color: "c2", popular: true },
             { n: "11", cat: "Translation", title: "Wicapedia Emoji", desc: "Turn perfectly good Wikipedia articles into unreadable emoji.", href: "/wikiemoji", color: "c3", popular: true },
             { n: "12", cat: "Analysis", title: "Website DNA", desc: "Dissect any website's colours, fonts and personality.", href: "/websitedna", color: "c4", popular: true },
-            //{ n: "13", cat: "Creativity", title: "Paint Simulator", desc: "Start with a peaceful paint app. Watch it slowly descend into colourful, uncontrollable chaos.", href: "/paintsim", color: "c2" },
             { n: "13", cat: "Puzzles", title: "Hacker Simulator", desc: "Become an elite hacker by guessing passwords that couldn't possibly fool anyone.", href: "/hackersim", color: "c1" },
             { n: "14", cat: "Aesthetic", title: "Hacker Screen", desc: "A screen full of green nonsense to make you look busy and important.", href: "/hacker", color: "c2" },
             { n: "15", cat: "Adventure", title: "Escape The Browser", desc: "You're hopelessly lost on the internet. you got to find your way home.", href: "/escape", color: "c3" },
@@ -530,7 +528,6 @@
         const mainGrid = document.getElementById("mainGrid");
         const popularGrid = document.getElementById("popularGrid");
         const searchInput = document.getElementById("searchInput");
-        const searchCount = document.getElementById("searchCount");
         const allCount = document.getElementById("allCount");
         const seachcount = document.getElementById("seachcount");
         const emptyState = document.getElementById("emptyState");
@@ -609,7 +606,6 @@
         renderPopular();
         renderGrid();
         allCount.textContent = `${games.length +1} games`;
-        seachcount.textContent = `${games.length +1} games`;
         searchInput.addEventListener("input", applySearch);
     </script>
 
