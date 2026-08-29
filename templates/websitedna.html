@@ -344,7 +344,7 @@
     <div id="arena">
         <div class="url-row backend-row" style="display: none;">
             <label for="backendInput" class="backend-label">backend:</label>
-            <input type="text" id="backendInput" value="http://fun.theorangecow.org/websitedna/" />
+            <input type="text" id="backendInput" value="https://fun.theorangecow.org/websitedna" />
         </div>
         <div class="url-row">
             <input type="text" id="urlInput" placeholder="https://example.com" />
@@ -497,7 +497,7 @@
         async function sequence(rawUrl) {
             const backend = backendInput.value.trim().replace(/\/$/, '');
             if (!backend) {
-                statusMsg.textContent = 'enter a backend url first (see the flask app instructions).';
+                statusMsg.textContent = 'enter a backend url first.';
                 statusMsg.className = 'status-msg error';
                 return;
             }

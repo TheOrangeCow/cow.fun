@@ -16,7 +16,7 @@ MAX_CSS_FILES = 6
 MAX_CSS_BYTES = 400_000
 USER_AGENT = (
     "Mozilla/5.0 (compatible; WebsiteDNABot/1.0; "
-    "+https://cow.fun/websitedna_game.html)"
+    "+https://fun.theorangecow.org/websitedna)"
 )
 
 
