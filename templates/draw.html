@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Draw - cow.fun</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --orange: #FF6B2C;
+            --pink: #FF4FA0;
+            --line: rgba(23, 22, 26, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        a.back {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+        }
+
+        a.back:hover {
+            color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #handToggle,
+        #clearDraw {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: #fff;
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 6px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        #handToggle:hover,
+        #clearDraw:hover {
+            border-color: var(--ink);
+        }
+
+        #handToggle.active {
+            background: var(--orange);
+            color: #fff;
+            border-color: var(--orange);
+        }
+
+        .title-block {
+            text-align: center;
+            padding: 6px 20px 10px;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            font-size: clamp(28px, 5vw, 44px);
+            margin: 0 0 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink-soft);
+            min-height: 20px;
+            transition: opacity .15s ease;
+        }
+
+        #arena {
+            position: relative;
+            flex: 1;
+            margin: 10px clamp(12px, 3vw, 40px) clamp(16px, 4vw, 40px);
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 44, 0.05), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 79, 160, 0.06), transparent 40%);
+            min-height: 420px;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #camera {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #handStatus {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            background: #fff;
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 999px;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        #startButton {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            border: none;
+            border-radius: 16px;
+            color: #fff;
+            background: var(--orange);
+            box-shadow: 0 6px 0 var(--ink);
+            cursor: pointer;
+            padding: 14px 24px;
+            font-size: 18px;
+            z-index: 20;
+        }
+
+        #startButton:active {
+            box-shadow: 0 2px 0 var(--ink);
+            transform: translate(-50%, calc(-50% + 4px));
+        }
+
+        @media (max-width: 650px) {
+            header {
+                padding: 14px 12px;
+            }
+
+            .header-right {
+                gap: 5px;
+            }
+
+            #handToggle,
+            #clearDraw {
+                font-size: 11px;
+                padding: 6px 9px;
+            }
+        }
+    </style>
+
+
+</head>
+
+<body>
+
+
+    <header>
+        <a class="back" href="index.html">← cow.fun</a>
+
+        <div class="header-right">
+            <button id="clearDraw">clear drawing</button>
+            <button id="handToggle">show hand: off</button>
+        </div>
+    </header>
+
+    <div class="title-block">
+        <h1>Hand Draw</h1>
+        <div class="caption" id="caption">pinch your thumb and index finger together to draw.</div>
+    </div>
+
+    <div id="arena">
+        <video id="camera" autoplay playsinline></video>
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="handStatus">camera not started</div>
+
+        <button id="startButton">start drawing</button>
+    </div>
+
+
+    <script type="module">
+        import {
+            HandLandmarker,
+            FilesetResolver
+        } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/vision_bundle.mjs";
+
+        const arena = document.getElementById("arena");
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const video = document.getElementById("camera");
+        const startButton = document.getElementById("startButton");
+        const handStatus = document.getElementById("handStatus");
+        const handToggle = document.getElementById("handToggle");
+        const clearDrawBtn = document.getElementById("clearDraw");
+
+        let handLandmarker;
+        let cameraStarted = false;
+        let lastVideoTime = -1;
+
+        let showHand = false;
+        let currentHandLandmarks = null;
+
+        const PINCH_THRESHOLD = 0.055;
+        let isPinching = false;
+        let drawPaths = [];
+        let currentPath = null;
+
+        const handConnections = [
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 4],
+
+            [0, 5],
+            [5, 6],
+            [6, 7],
+            [7, 8],
+
+            [0, 17],
+            [17, 18],
+            [18, 19],
+            [19, 20],
+
+            [5, 9],
+            [9, 10],
+            [10, 11],
+            [11, 12],
+
+            [9, 13],
+            [13, 14],
+            [14, 15],
+            [15, 16]
+        ];
+
+        function resizeCanvas() {
+            const rect = arena.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+
+            canvas.style.width = rect.width + "px";
+            canvas.style.height = rect.height + "px";
+
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function drawRoundedRect(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, r);
+            ctx.fill();
+        }
+
+        function drawHand() {
+            if (!showHand || !currentHandLandmarks) return;
+
+            const rect = arena.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            const landmarks = currentHandLandmarks;
+
+            ctx.save();
+
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.strokeStyle = "#FF6B2C";
+
+            for (const [a, b] of handConnections) {
+                const pointA = landmarks[a];
+                const pointB = landmarks[b];
+
+                if (!pointA || !pointB) continue;
+
+                const ax = (1 - pointA.x) * w;
+                const ay = pointA.y * h;
+
+                const bx = (1 - pointB.x) * w;
+                const by = pointB.y * h;
+
+                ctx.beginPath();
+                ctx.moveTo(ax, ay);
+                ctx.lineTo(bx, by);
+                ctx.stroke();
+            }
+
+            for (let i = 0; i < landmarks.length; i++) {
+                const point = landmarks[i];
+
+                const x = (1 - point.x) * w;
+                const y = point.y * h;
+
+                ctx.beginPath();
+                ctx.arc(
+                    x,
+                    y,
+                    i === 8 ? 8 : 5,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fillStyle =
+                    i === 8 ? "#FF4FA0" : "#17161A";
+
+                ctx.fill();
+
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#fff";
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function drawDrawings() {
+            if (drawPaths.length === 0) return;
+
+            const rect = arena.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            ctx.save();
+
+            ctx.lineWidth = 5;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.strokeStyle = "#FF4FA0";
+
+            for (const path of drawPaths) {
+                if (path.length < 2) {
+                    if (path.length === 1) {
+                        const p = path[0];
+                        const x = (1 - p.x) * w;
+                        const y = p.y * h;
+
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+                        ctx.fillStyle = "#FF4FA0";
+                        ctx.fill();
+                    }
+                    continue;
+                }
+
+                ctx.beginPath();
+
+                for (let i = 0; i < path.length; i++) {
+                    const p = path[i];
+                    const x = (1 - p.x) * w;
+                    const y = p.y * h;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function drawScene() {
+            const rect = arena.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            ctx.fillStyle = "rgba(255,255,255,0.55)";
+            ctx.fillRect(0, 0, w, h);
+
+            drawDrawings();
+            drawHand();
+        }
+
+        async function setupHandTracking() {
+            handStatus.textContent = "loading hand tracking...";
+
+            const vision = await FilesetResolver.forVisionTasks(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm"
+            );
+
+            handLandmarker = await HandLandmarker.createFromOptions(
+                vision,
+                {
+                    baseOptions: {
+                        modelAssetPath:
+                            "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                        delegate: "GPU"
+                    },
+                    runningMode: "VIDEO",
+                    numHands: 1,
+                    minHandDetectionConfidence: 0.5,
+                    minHandPresenceConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                }
+            );
+
+            handStatus.textContent = "show your hand";
+        }
+
+        function detectHand() {
+            if (
+                !handLandmarker ||
+                !cameraStarted ||
+                video.readyState < 2
+            ) {
+                requestAnimationFrame(detectHand);
+                return;
+            }
+
+            if (video.currentTime !== lastVideoTime) {
+                lastVideoTime = video.currentTime;
+
+                const result =
+                    handLandmarker.detectForVideo(
+                        video,
+                        performance.now()
+                    );
+
+                if (
+                    result.landmarks &&
+                    result.landmarks.length > 0
+                ) {
+                    const hand = result.landmarks[0];
+
+                    currentHandLandmarks = hand;
+
+                    const indexFinger = hand[8];
+                    const thumbTip = hand[4];
+
+                    const pinchDist = Math.hypot(
+                        thumbTip.x - indexFinger.x,
+                        thumbTip.y - indexFinger.y
+                    );
+
+                    const nowPinching = pinchDist < PINCH_THRESHOLD;
+
+                    const midX = (thumbTip.x + indexFinger.x) / 2;
+                    const midY = (thumbTip.y + indexFinger.y) / 2;
+
+                    if (nowPinching) {
+                        if (!isPinching) {
+                            currentPath = [];
+                            drawPaths.push(currentPath);
+                        }
+
+                        currentPath.push({ x: midX, y: midY });
+                        isPinching = true;
+
+                        handStatus.textContent = "drawing";
+                    } else {
+                        isPinching = false;
+                        currentPath = null;
+
+                        handStatus.textContent = "hand detected";
+                    }
+                } else {
+                    currentHandLandmarks = null;
+                    isPinching = false;
+                    currentPath = null;
+
+                    handStatus.textContent =
+                        "show your hand";
+                }
+            }
+
+            requestAnimationFrame(detectHand);
+        }
+
+        async function startCamera() {
+            try {
+                startButton.style.display = "none";
+
+                handStatus.textContent =
+                    "starting camera...";
+
+                const stream =
+                    await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: "user",
+                            width: {
+                                ideal: 1280
+                            },
+                            height: {
+                                ideal: 720
+                            }
+                        },
+                        audio: false
+                    });
+
+                video.srcObject = stream;
+
+                await video.play();
+
+                cameraStarted = true;
+
+                await setupHandTracking();
+
+                handStatus.textContent =
+                    "hand detected";
+
+                detectHand();
+
+            } catch (error) {
+                console.error(error);
+
+                startButton.style.display = "block";
+
+                handStatus.textContent =
+                    "camera permission required";
+
+                startButton.textContent =
+                    "try again";
+            }
+        }
+
+        handToggle.addEventListener("click", () => {
+            showHand = !showHand;
+
+            handToggle.textContent =
+                showHand
+                    ? "show hand: on"
+                    : "show hand: off";
+
+            handToggle.classList.toggle(
+                "active",
+                showHand
+            );
+        });
+
+        clearDrawBtn.addEventListener("click", () => {
+            drawPaths = [];
+            currentPath = null;
+            isPinching = false;
+        });
+
+        startButton.addEventListener(
+            "click",
+            startCamera
+        );
+
+        function renderLoop() {
+            drawScene();
+            requestAnimationFrame(renderLoop);
+        }
+
+        resizeCanvas();
+
+        window.addEventListener(
+            "resize",
+            resizeCanvas
+        );
+
+        requestAnimationFrame(renderLoop);
+    </script>
+
+
+</body>
+
+</html>
