@@ -344,7 +344,7 @@
     <div id="arena">
         <div class="url-row backend-row" style="display: none;">
             <label for="backendInput" class="backend-label">backend:</label>
-            <input type="text" id="backendInput" value="http://127.0.0.1:5000/websitedna/" />
+            <input type="text" id="backendInput" value="http://fun.theorangecow.org/websitedna/" />
         </div>
         <div class="url-row">
             <input type="text" id="urlInput" placeholder="https://example.com" />
@@ -522,8 +522,7 @@
 
             } catch (err) {
                 statusMsg.textContent =
-                    "couldn't reach the backend at " + backend +
-                    " - is the flask app running? (see app.py instructions)";
+                    "couldn't reach the backend at " + backend 
                 statusMsg.className = 'status-msg error';
             } finally {
                 goBtn.disabled = false;

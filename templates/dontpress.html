@@ -216,7 +216,7 @@
 
     <div id="overlay">
         <h2 id="overlayTitle">FAILED</h2>
-        <p id="overlayText">You moved. The cow saw everything.</p>
+        <p id="overlayText">You moved.</p>
         <button onclick="location.reload()">try again</button>
     </div>
 
@@ -265,7 +265,7 @@
             }
             setTimeout(() => {
                 overlayTitle.textContent = 'you waited. weird.';
-                overlayText.textContent = 'You survived 30 seconds of doing absolutely nothing. The cow is deeply unsettled by your patience.';
+                overlayText.textContent = 'You survived 30 seconds of doing absolutely nothing.';
                 overlay.style.display = 'flex';
             }, 1200);
         }
