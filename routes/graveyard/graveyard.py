@@ -6,7 +6,8 @@ from flask import Blueprint, request, jsonify
 
 graveyard = Blueprint("graveyard", __name__)
 
-DB_PATH = "/routes/graveyard/graveyard.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "graveyard.db")
 
 
 def get_db():
