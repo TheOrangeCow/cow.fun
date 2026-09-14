@@ -14,6 +14,7 @@ from routes.wikiemoji.wikiemoji import wikiemoji
 from routes.graveyard.graveyard import graveyard
 from routes.wordle import wordle_bp
 from routes.pacman.pacman import pacman_bp
+from routes.tag import cowtag
 
 
 app = Flask(__name__)
@@ -46,7 +47,10 @@ app.register_blueprint(
     url_prefix="/pacman"
 )
 
-
+app.register_blueprint(
+    cowtag,
+    url_prefix="/tag"
+)
 # Webpages
 
 @app.route("/")

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cow Tag - cow.fun</title>
+
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.ico') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #FDFCF6;
+            --ink: #17161A;
+            --ink-soft: #4A4850;
+            --blue: #4AA9FF;
+            --blue-dark: #1877D2;
+            --green: #42B883;
+            --red: #FF4F4F;
+            --yellow: #F0A52B;
+            --line: rgba(23, 22, 26, .14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: Inter, sans-serif;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px clamp(16px, 4vw, 48px);
+        }
+
+        .back {
+            color: var(--ink-soft);
+            text-decoration: none;
+            border: 1px solid var(--line);
+            background: white;
+            border-radius: 999px;
+            padding: 7px 13px;
+            font: 13px "IBM Plex Mono", monospace;
+        }
+
+        .time {
+            background: var(--ink);
+            color: white;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font: 13px "IBM Plex Mono", monospace;
+        }
+
+        .title {
+            text-align: center;
+            padding: 5px 20px 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font: 600 clamp(32px, 6vw, 48px) Fredoka, sans-serif;
+        }
+
+        .subtitle {
+            color: var(--ink-soft);
+            font: 13px "IBM Plex Mono", monospace;
+            margin-top: 5px;
+        }
+
+        #lobby {
+            width: min(500px, calc(100% - 30px));
+            margin: 25px auto;
+            background: white;
+            border: 2px solid var(--line);
+            border-radius: 24px;
+            padding: 25px;
+        }
+
+        .lobby-title {
+            font: 600 27px Fredoka, sans-serif;
+            margin-bottom: 15px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 13px;
+            font: 14px Inter, sans-serif;
+            outline: none;
+            margin-bottom: 10px;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--blue);
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 12px 15px;
+            font: 13px "IBM Plex Mono", monospace;
+        }
+
+        .primary {
+            width: 100%;
+            background: var(--blue);
+            color: white;
+        }
+
+        .primary:hover {
+            background: var(--blue-dark);
+        }
+
+        .secondary {
+            width: 100%;
+            background: #f2f2f2;
+            color: var(--ink);
+            margin-top: 8px;
+        }
+
+        .room-code {
+            background: var(--ink);
+            color: white;
+            font: 600 30px "IBM Plex Mono", monospace;
+            text-align: center;
+            border-radius: 14px;
+            padding: 15px;
+            letter-spacing: 5px;
+            margin: 15px 0;
+        }
+
+        #lobbyPlayers {
+            margin: 15px 0;
+        }
+
+        .lobby-player {
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 11px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .host {
+            font: 10px "IBM Plex Mono", monospace;
+            color: var(--blue-dark);
+        }
+
+        #error {
+            display: none;
+            background: #fff0f0;
+            color: #c33;
+            border-radius: 10px;
+            padding: 10px;
+            font: 12px "IBM Plex Mono", monospace;
+            margin-top: 10px;
+        }
+
+        #game {
+            display: none;
+            margin: 10px clamp(10px, 3vw, 40px) 30px;
+        }
+
+        #arena {
+            position: relative;
+            height: min(75vh, 760px);
+            min-height: 500px;
+            overflow: hidden;
+            border: 2px dashed var(--line);
+            border-radius: 24px;
+            background:
+                linear-gradient(135deg,
+                    #eef9e9 0%,
+                    #f7f8ec 50%,
+                    #eaf7e9 100%);
+        }
+
+        #world {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3200px;
+            height: 1800px;
+            transform-origin: 0 0;
+            will-change: transform;
+        }
+
+        .ground-detail {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(66, 184, 131, .07);
+        }
+
+        .world-object {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .tree {
+            width: 70px;
+            height: 100px;
+        }
+
+        .tree-trunk {
+            position: absolute;
+            width: 18px;
+            height: 48px;
+            left: 26px;
+            bottom: 3px;
+            background: #9a633d;
+            border: 3px solid #222;
+            border-radius: 8px;
+        }
+
+        .tree-leaves {
+            position: absolute;
+            width: 66px;
+            height: 66px;
+            left: 2px;
+            top: 0;
+            background: #42B883;
+            border: 4px solid #222;
+            border-radius: 50%;
+        }
+
+        .tree-leaves::after {
+            content: "";
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            left: 18px;
+            top: 17px;
+            background: #329a6b;
+            border-radius: 50%;
+        }
+
+        .rock {
+            background: #888;
+            border: 4px solid #444;
+            border-radius: 45% 55% 48% 52%;
+        }
+
+        .bush {
+            background: #58bd72;
+            border: 4px solid #27683b;
+            border-radius: 50%;
+        }
+
+        .building {
+            background: #f0d7aa;
+            border: 5px solid #333;
+            border-radius: 12px;
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, .12);
+        }
+
+        .building::before {
+            content: "";
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            top: -30px;
+            height: 45px;
+            background: #c95b51;
+            border: 5px solid #333;
+            border-bottom: none;
+            transform: skewX(-12deg);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .pond {
+            background: #73c8ef;
+            border: 6px solid #277fa8;
+            border-radius: 48% 52% 44% 56%;
+            box-shadow: inset 0 0 0 8px rgba(255, 255, 255, .18);
+        }
+
+        .fence {
+            position: absolute;
+            height: 18px;
+            background: #c08b54;
+            border-top: 5px solid #704525;
+            border-bottom: 5px solid #704525;
+        }
+
+        .grass {
+            border-radius: 50%;
+            background: rgba(54, 150, 75, .08);
+        }
+
+        .pickup {
+            position: absolute;
+            width: 46px;
+            height: 46px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: #ffd84a;
+            border: 4px solid #222;
+            box-shadow: 0 0 0 7px rgba(255, 216, 74, .22);
+            animation: pickupPulse 1s infinite alternate;
+        }
+
+        .pickup::before {
+            content: "⚡";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+        }
+
+        @keyframes pickupPulse {
+            from {
+                transform: translate(-50%, -50%) scale(.9);
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1.08);
+            }
+        }
+
+        .bullet {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: #ffdf6b;
+            border: 3px solid #8a5b00;
+            box-shadow: 0 0 8px 2px rgba(255, 200, 60, .7);
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .can {
+            position: absolute;
+            width: 40px;
+            height: 46px;
+            transform: translate(-50%, -50%);
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .can-body {
+            position: absolute;
+            inset: 6px 2px 2px;
+            background: #c0c8cc;
+            border: 4px solid #222;
+            border-radius: 6px;
+        }
+
+        .can-top {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            top: 0;
+            height: 12px;
+            background: #e2e6e8;
+            border: 4px solid #222;
+            border-radius: 4px;
+        }
+
+        .can.held {
+            filter: drop-shadow(0 0 6px #ffd84a);
+        }
+
+        .cow.dead {
+            opacity: .35;
+            filter: grayscale(1);
+        }
+
+        .cow-dead-label {
+            position: absolute;
+            left: 50%;
+            top: -14px;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            background: var(--red);
+            color: white;
+            border-radius: 999px;
+            padding: 2px 7px;
+            font: 9px "IBM Plex Mono", monospace;
+            display: none;
+        }
+
+        .cow {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            will-change: left, top;
+        }
+
+        .cow-body {
+            position: absolute;
+            inset: 12px 5px 5px;
+            border-radius: 48% 48% 42% 42%;
+            background: white;
+            border: 4px solid #222;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, .1);
+        }
+
+        .cow-head {
+            position: absolute;
+            width: 43px;
+            height: 38px;
+            left: 13px;
+            top: 0;
+            background: white;
+            border: 4px solid #222;
+            border-radius: 48%;
+            z-index: 2;
+        }
+
+        .cow-eye {
+            position: absolute;
+            width: 5px;
+            height: 7px;
+            background: #17161A;
+            border-radius: 50%;
+            top: 12px;
+        }
+
+        .cow-eye.left {
+            left: 10px;
+        }
+
+        .cow-eye.right {
+            right: 10px;
+        }
+
+        .cow-nose {
+            position: absolute;
+            width: 20px;
+            height: 10px;
+            background: #ffb8c0;
+            border: 2px solid #222;
+            border-radius: 50%;
+            bottom: 4px;
+            left: 8px;
+        }
+
+        .spot {
+            position: absolute;
+            background: #222;
+            border-radius: 50%;
+            z-index: 3;
+        }
+
+        .spot.one {
+            width: 20px;
+            height: 15px;
+            left: 10px;
+            top: 22px;
+        }
+
+        .spot.two {
+            width: 14px;
+            height: 20px;
+            right: 9px;
+            bottom: 10px;
+        }
+
+        .name {
+            position: absolute;
+            left: 50%;
+            bottom: -17px;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            background: rgba(23, 22, 26, .9);
+            color: white;
+            border-radius: 999px;
+            padding: 3px 7px;
+            font: 10px "IBM Plex Mono", monospace;
+        }
+
+        .it-ring {
+            position: absolute;
+            inset: -8px;
+            border: 4px solid var(--red);
+            border-radius: 50%;
+            animation: pulse .7s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                transform: scale(.95);
+                opacity: .7;
+            }
+
+            to {
+                transform: scale(1.08);
+                opacity: 1;
+            }
+        }
+
+        .boost-ring {
+            position: absolute;
+            inset: -12px;
+            border: 3px solid #ffd84a;
+            border-radius: 50%;
+            animation: boostPulse .5s infinite alternate;
+        }
+
+        @keyframes boostPulse {
+            from {
+                opacity: .5;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .hud-box {
+            background: rgba(255, 255, 255, .94);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 9px 13px;
+            font: 12px "IBM Plex Mono", monospace;
+        }
+
+        #countdown {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(23, 22, 26, .65);
+            color: white;
+            font: 700 100px Fredoka, sans-serif;
+            z-index: 40;
+        }
+
+        #message {
+            position: absolute;
+            left: 50%;
+            top: 90px;
+            transform: translateX(-50%);
+            background: var(--ink);
+            color: white;
+            padding: 11px 18px;
+            border-radius: 999px;
+            display: none;
+            font: 12px "IBM Plex Mono", monospace;
+            z-index: 30;
+        }
+
+        #gameOver {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            background: rgba(23, 22, 26, .94);
+            color: white;
+            z-index: 50;
+        }
+
+        #gameOver h2 {
+            font: 600 50px Fredoka, sans-serif;
+            margin: 0 0 10px;
+        }
+
+        #gameOver p {
+            font: 13px "IBM Plex Mono", monospace;
+            color: #ddd;
+            margin-bottom: 25px;
+        }
+
+        #mobileControls {
+            display: none;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        #mobileControls button {
+            width: 55px;
+            height: 55px;
+            margin: 3px;
+            background: white;
+            border: 1px solid var(--line);
+        }
+
+        @media (max-width: 700px) {
+            #mobileControls {
+                display: block;
+            }
+
+            #arena {
+                min-height: 430px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="back" href="/">← cow.fun</a>
+
+        <div class="time">
+            time: <span id="timer">120</span>s
+        </div>
+    </header>
+
+    <div class="title">
+        <h1>Cow Tag</h1>
+        <div class="subtitle">
+            run. chase. don't get tagged.
+        </div>
+    </div>
+
+    <div id="lobby">
+
+        <div class="lobby-title">
+            Join the herd
+        </div>
+
+        <input id="nameInput" maxlength="16" placeholder="your cow name" autocomplete="off">
+
+        <select id="modeInput">
+            <option value="it">It</option>
+            <option value="build_up">Build Up It</option>
+            <option value="gun">Gun Fight</option>
+            <option value="can">Capture the Can</option>
+        </select>
+
+        <button class="primary" onclick="createRoom()">
+            create room
+        </button>
+
+        <input id="roomInput" maxlength="5" placeholder="room code" autocomplete="off"
+            style="margin-top:10px;text-transform:uppercase;">
+
+        <button class="secondary" onclick="joinRoom()">
+            join room
+        </button>
+
+        <div id="error"></div>
+
+        <div id="roomArea" style="display:none;">
+
+            <div class="room-code" id="roomCode"></div>
+
+            <div style="
+            text-align:center;
+            font:11px 'IBM Plex Mono';
+            color:#777;
+        ">
+                share this code with your friends
+            </div>
+
+            <div id="lobbyPlayers"></div>
+
+            <div id="modeDisplay" style="
+            text-align:center;
+            margin:10px 0 14px;
+            font:11px 'IBM Plex Mono';
+            color:#777;
+        "></div>
+
+            <button id="startButton" class="primary" onclick="startGame()">
+                start game
+            </button>
+
+        </div>
+
+    </div>
+
+    <div id="game">
+
+        <div id="arena">
+
+            <div id="world"></div>
+
+            <div id="hud">
+
+                <div class="hud-box">
+                    <span id="status">waiting...</span>
+                </div>
+
+                <div class="hud-box">
+                    <span id="playerCount">
+                        0 players
+                    </span>
+                </div>
+
+                <div class="hud-box" id="modeInfoBox" style="display:none;">
+                    <span id="modeInfo"></span>
+                </div>
+
+            </div>
+
+            <div id="message"></div>
+
+            <div id="countdown"></div>
+
+            <div id="gameOver">
+
+                <h2 id="winnerText">
+                    Game over
+                </h2>
+
+                <p id="winnerSubtext"></p>
+
+                <button class="primary" style="width:auto;" onclick="restartGame()">
+                    play again
+                </button>
+
+            </div>
+
+        </div>
+
+        <div id="mobileControls">
+
+            <div>
+                <button onpointerdown="pressKey('ArrowUp')">
+                    ▲
+                </button>
+            </div>
+
+            <div>
+                <button onpointerdown="pressKey('ArrowLeft')">
+                    ◀
+                </button>
+
+                <button onpointerdown="pressKey('ArrowDown')">
+                    ▼
+                </button>
+
+                <button onpointerdown="pressKey('ArrowRight')">
+                    ▶
+                </button>
+            </div>
+
+            <div id="mobileShoot" style="display:none;margin-top:6px;">
+                <button onpointerdown="mobileShoot()">
+                    shoot
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <script src="{{ url_for('static', filename='cowtag/cowtag.js') }}"></script>
+
+</body>
+
+</html>
