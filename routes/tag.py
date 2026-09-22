@@ -394,7 +394,7 @@ def change_mode(data):
     send_state(code)
 
 
-@socketio.on("scowtag_tart_game")
+@socketio.on("cowtag_start_game")
 def start_game(data):
     code = str(data.get("code", "")).strip().upper()
     room = rooms.get(code)
